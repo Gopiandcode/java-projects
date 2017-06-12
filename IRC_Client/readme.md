@@ -12,7 +12,7 @@ Took ages to set up the resizing and the positioning of the items of the applica
 
 # Development Process
 ## Initial Diagram
-![Initial Diagram](https://raw.githubusercontent.com/Gopiandcode/java-projects/master/IRC_Client/Screen%20Diagram.png)
+![Initial Diagram](https://raw.githubusercontent.com/Gopiandcode/java-projects/master/IRC_Client/Diagram.png)
 
 The first step in constructing the system was to come up with a set of diagrams to depict how the application should look.
 This also helped form the development plan for the application - by drawing out the image I could solidify the concept and
