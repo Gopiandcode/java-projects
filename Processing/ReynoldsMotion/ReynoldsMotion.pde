@@ -34,7 +34,7 @@ class Vehicle {
   void step() {
     velocity.add(acceleration);
     location.add(velocity);
-    checkEdges();
+    checkEdges();    
     velocity.limit(maxspeed);
     acceleration.mult(0);
   }
