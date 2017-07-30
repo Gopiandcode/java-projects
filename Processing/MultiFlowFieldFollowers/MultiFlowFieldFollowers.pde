@@ -18,18 +18,10 @@ void setup() {
      float yoff = 0;
      int last_col = -1;
      public PVector get(int col, int row) {
-       if(last_col == -1) last_col = col;
+       float theta_col = map(col, 0, int(width/30), 0,TWO_PI);
+       float theta_row = map(row, 0, int(height/30), 0, TWO_PI);
        
-       if(last_col != col) {
-        yoff = 0;
-        xoff += 0.1;
-       }
-       
-       float theta = map(noise(xoff, yoff), 0, 1, 0, TWO_PI);
-       
-       yoff += 0.1;
-       return new PVector(cos(theta), sin(theta));
-       
+       return new PVector(cos(theta_col), sin(theta_row));
      }
    });
 }
