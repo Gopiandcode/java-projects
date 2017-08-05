@@ -110,7 +110,7 @@ Population population;
 
 void setup() {
   size(640, 360);
-  population = new Population(150, 0.01, "to be or not to be");
+  population = new Population(1500, 0.05, "to be or not to be");
 }
 
 void draw() {
