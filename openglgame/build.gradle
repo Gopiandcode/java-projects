@@ -1,0 +1,33 @@
+group 'gopiandcode'
+version '1.0-SNAPSHOT'
+
+apply plugin: 'java'
+apply plugin: 'idea'
+
+sourceCompatibility = 1.8
+
+repositories {
+    mavenCentral()
+    flatDir {
+        dirs 'libs'
+    }
+}
+
+dependencies {
+    testCompile group: 'junit', name: 'junit', version: '4.12'
+
+    compile group: 'org.lwjgl', name: 'lwjgl', version: '2.9.3'
+//    compile group: 'org.lwjgl', name: 'lwjgl-opengl', version: '3.1.5'
+//    compile group: 'org.lwjgl', name: 'lwjgl-glfw', version: '3.1.5'
+//    compile group: 'org.lwjgl', name: 'lwjgl-openal', version: '3.1.5'
+//    compile group: 'org.lwjgl', name: 'lwjgl-nfd', version: '3.1.5'
+
+    compile group: 'slick-util', name: 'slick-util', version: '1.0.0'
+}
+
+task example(type: JavaExec, dependsOn: 'classes') {
+    main = "com.gopiandcode.gametester.MainGameLoop"
+    classpath sourceSets.main.runtimeClasspath
+    systemProperty 'org.lwjgl.librarypath', 'C:\\Users\\gopia\\Downloads\\extracted\\lwjgl-2.9.3\\native\\windows'
+}
+
