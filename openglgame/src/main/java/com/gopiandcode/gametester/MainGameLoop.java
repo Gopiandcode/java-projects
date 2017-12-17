@@ -1,5 +1,6 @@
 package com.gopiandcode.gametester;
 
+import com.gopiandcode.entity.Camera;
 import com.gopiandcode.entity.Entity;
 import com.gopiandcode.models.TexturedModel;
 import com.gopiandcode.render.DisplayManager;
@@ -53,14 +54,17 @@ public class MainGameLoop {
         TexturedModel texturedModel = new TexturedModel(model, texture);
 
         Entity entity = new Entity(texturedModel, new Vector3f(0,0,-2), 0,0,0,1);
+        Camera camera = new Camera();
         while(!Display.isCloseRequested()) {
-            entity.increasePosition(0.0f,0,-0.01f);
+//            entity.increasePosition(0.0f,0,-0.01f);
 //            entity.increaseRotation(0.2f,0,0);
 
             renderer.prepare();
             // game logic
+            camera.move();
 
             shader.start();
+            shader.loadViewMatrix(camera);
             renderer.render(entity, shader);
             shader.stop();
             // game rendering
