@@ -2,6 +2,7 @@ package com.gopiandcode.shaders;
 
 import org.joml.Matrix4f;
 import org.joml.Vector3f;
+import org.lwjgl.BufferUtils;
 import org.lwjgl.opengl.GL11;
 import org.lwjgl.opengl.GL20;
 
@@ -9,6 +10,7 @@ import java.io.BufferedReader;
 import java.io.FileReader;
 import java.io.IOException;
 import java.nio.FloatBuffer;
+import java.util.Arrays;
 
 public abstract class ShaderProgram {
     public enum ShaderType {
@@ -25,7 +27,7 @@ public abstract class ShaderProgram {
     private int programID;
     private int vertexShaderID;
     private int fragmentShaderID;
-    private static FloatBuffer matrixBuffer = FloatBuffer.allocate(16);
+    private static FloatBuffer matrixBuffer = BufferUtils.createFloatBuffer(16);
 
     public ShaderProgram(String vertexFile, String fragmentFile) {
         vertexShaderID = loadShader(vertexFile, ShaderType.VERTEX_SHADER);
@@ -110,7 +112,9 @@ public abstract class ShaderProgram {
 
 
     protected void loadMatrix(int location, Matrix4f matrix){
-        matrix.get(matrixBuffer);
+        matrixBuffer.clear();
+        matrix.get(0, matrixBuffer);
+        matrixBuffer.position(16);
         matrixBuffer.flip();
         GL20.glUniformMatrix4(location, false, matrixBuffer);
     }
