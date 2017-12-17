@@ -1,4 +1,4 @@
-package com.gopiandcode.render;
+package com.gopiandcode.models;
 
 public class RawModel {
     private int vaoID;

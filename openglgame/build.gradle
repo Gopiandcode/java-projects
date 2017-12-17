@@ -23,6 +23,7 @@ dependencies {
 //    compile group: 'org.lwjgl', name: 'lwjgl-nfd', version: '3.1.5'
 
     compile group: 'slick-util', name: 'slick-util', version: '1.0.0'
+    compile group: 'org.joml', name: 'joml', version: '1.9.6'
 }
 
 task example(type: JavaExec, dependsOn: 'classes') {
