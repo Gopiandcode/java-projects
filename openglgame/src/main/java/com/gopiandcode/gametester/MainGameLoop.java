@@ -2,11 +2,10 @@ package com.gopiandcode.gametester;
 
 import com.gopiandcode.entity.Camera;
 import com.gopiandcode.entity.Entity;
+import com.gopiandcode.entity.Light;
 import com.gopiandcode.models.TexturedModel;
-import com.gopiandcode.render.DisplayManager;
-import com.gopiandcode.render.Loader;
+import com.gopiandcode.render.*;
 import com.gopiandcode.models.RawModel;
-import com.gopiandcode.render.Renderer;
 import com.gopiandcode.shaders.StaticShader;
 import com.gopiandcode.textures.ModelTexture;
 import com.gopiandcode.toolbox.Maths;
@@ -22,7 +21,6 @@ public class MainGameLoop {
 
         Loader loader = new Loader();
         StaticShader shader = new StaticShader();
-        Renderer renderer = new Renderer(shader);
 
          float[] vertices = {
                  -0.5f, 0.5f,
@@ -48,26 +46,33 @@ public class MainGameLoop {
                 2
         };
 
-        RawModel model = loader.loadToVao(vertices, textureCoords, indices);
-        ModelTexture texture = new ModelTexture(loader.loadTexture("image"));
+        RawModel model = OBJLoader.loadObjModel("stall", loader);
+        ModelTexture texture = new ModelTexture(loader.loadTexture("stallTexture"));
 
         TexturedModel texturedModel = new TexturedModel(model, texture);
 
-        Entity entity = new Entity(texturedModel, new Vector3f(0,0,-2), 0,0,0,1);
+        Entity entity = new Entity(texturedModel, new Vector3f(0,0,-25), 0,0,0,1);
+        Light light = new Light(new Vector3f(0,0,-20), new Vector3f(1,1,1));
         Camera camera = new Camera();
-        while(!Display.isCloseRequested()) {
-//            entity.increasePosition(0.0f,0,-0.01f);
-//            entity.increaseRotation(0.2f,0,0);
 
-            renderer.prepare();
+        texture.setReflectivity(1);
+        texture.setShineDamper(10);
+
+        MasterRenderer renderer = new MasterRenderer();
+
+        while(!Display.isCloseRequested()) {
+
+//            entity.increasePosition(0.0f,0,-0.01f);
+            entity.increaseRotation(0f,0.2f,0.0f);
+
             // game logic
             camera.move();
 
-            shader.start();
-            shader.loadViewMatrix(camera);
-            renderer.render(entity, shader);
-            shader.stop();
+            renderer.processEntity(entity);
+
+
             // game rendering
+            renderer.render(light, camera);
 
 
             DisplayManager.updateDisplay();
