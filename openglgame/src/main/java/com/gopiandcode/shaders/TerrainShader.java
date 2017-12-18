@@ -4,12 +4,10 @@ import com.gopiandcode.entity.Camera;
 import com.gopiandcode.entity.Light;
 import com.gopiandcode.toolbox.Maths;
 import org.joml.Matrix4f;
-import org.joml.Vector3f;
-import org.lwjgl.opengl.GL11;
 
-public class StaticShader extends ShaderProgram{
-    private static final String VERTEX_FILE = "src/main/java/com/gopiandcode/shaders/vertexShader";
-    private static final String FRAGMENT_FILE = "src/main/java/com/gopiandcode/shaders/fragmentShader";
+public class TerrainShader extends  ShaderProgram{
+     private static final String VERTEX_FILE = "src/main/java/com/gopiandcode/shaders/terrainVertexShader";
+    private static final String FRAGMENT_FILE = "src/main/java/com/gopiandcode/shaders/terrainFragmentShader";
     private int location_transformationMatrix;
     private int location_projectionMatrix;
     private int location_viewMatrix;
@@ -18,7 +16,8 @@ public class StaticShader extends ShaderProgram{
     private int location_shineDamper;
     private int location_reflectivity;
 
-    public StaticShader() {
+    public TerrainShader()
+    {
         super(VERTEX_FILE, FRAGMENT_FILE);
     }
 

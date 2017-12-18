@@ -7,6 +7,7 @@ import com.gopiandcode.models.TexturedModel;
 import com.gopiandcode.render.*;
 import com.gopiandcode.models.RawModel;
 import com.gopiandcode.shaders.StaticShader;
+import com.gopiandcode.terrains.Terrain;
 import com.gopiandcode.textures.ModelTexture;
 import com.gopiandcode.toolbox.Maths;
 import org.joml.Vector3f;
@@ -22,31 +23,8 @@ public class MainGameLoop {
         Loader loader = new Loader();
         StaticShader shader = new StaticShader();
 
-         float[] vertices = {
-                 -0.5f, 0.5f,
-                 0, -0.5f,
-                 -0.5f, 0,
-                 0.5f, -0.5f,
-                 0, 0.5f,
-                 0.5f, 0f };
 
-
-        float[] textureCoords = {
-                 0, 0,
-                 0, 1,
-                 1, 1,
-                 1, 0
-         };
-        int[] indices = {
-                0,
-                1,
-                3,
-                3,
-                1,
-                2
-        };
-
-        RawModel model = OBJLoader.loadObjModel("stall", loader);
+        RawModel model = OBJLoader.loadObjModel("dragon", loader);
         ModelTexture texture = new ModelTexture(loader.loadTexture("stallTexture"));
 
         TexturedModel texturedModel = new TexturedModel(model, texture);
@@ -55,8 +33,10 @@ public class MainGameLoop {
         Light light = new Light(new Vector3f(0,0,-20), new Vector3f(1,1,1));
         Camera camera = new Camera();
 
-        texture.setReflectivity(1);
-        texture.setShineDamper(10);
+        Terrain terrain = new Terrain(0, -0, loader, new ModelTexture(loader.loadTexture("image")));
+
+//        texture.setReflectivity(1);
+//        texture.setShineDamper(10);
 
         MasterRenderer renderer = new MasterRenderer();
 
@@ -68,6 +48,7 @@ public class MainGameLoop {
             // game logic
             camera.move();
 
+            renderer.processTerrain(terrain);
             renderer.processEntity(entity);
 
 
