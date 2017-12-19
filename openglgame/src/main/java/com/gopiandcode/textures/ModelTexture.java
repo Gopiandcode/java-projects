@@ -1,8 +1,26 @@
 package com.gopiandcode.textures;
 
 public class ModelTexture {
-    private int textureId;
+    private final int textureId;
     private float shineDamper = 1;
+    private boolean hasTrasnparency = false;
+    private boolean useFakeLighting = false;
+
+    public boolean shouldUseFakeLighting() {
+        return useFakeLighting;
+    }
+
+    public void setUseFakeLighting(boolean useFakeLighting) {
+        this.useFakeLighting = useFakeLighting;
+    }
+
+    public boolean isTransparent() {
+        return hasTrasnparency;
+    }
+
+    public void setTrasnparency(boolean hasTrasnparency) {
+        this.hasTrasnparency = hasTrasnparency;
+    }
 
     public float getShineDamper() {
         return shineDamper;

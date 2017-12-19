@@ -4,6 +4,7 @@ import com.gopiandcode.entity.Camera;
 import com.gopiandcode.entity.Light;
 import com.gopiandcode.toolbox.Maths;
 import org.joml.Matrix4f;
+import org.joml.Vector3f;
 
 public class TerrainShader extends  ShaderProgram{
      private static final String VERTEX_FILE = "src/main/java/com/gopiandcode/shaders/terrainVertexShader";
@@ -15,6 +16,7 @@ public class TerrainShader extends  ShaderProgram{
     private int location_lightColour;
     private int location_shineDamper;
     private int location_reflectivity;
+    private int location_skyColour;
 
     public TerrainShader()
     {
@@ -38,9 +40,13 @@ public class TerrainShader extends  ShaderProgram{
         location_lightColour = super.getUniformLocation("lightColour");
         location_shineDamper = super.getUniformLocation("shineDamper");
         location_reflectivity = super.getUniformLocation("reflectivity");
+        location_skyColour = super.getUniformLocation("skyColour");
     }
 
 
+    public void loadSkyColour(float r, float g, float b) {
+        super.loadVector(location_skyColour, new Vector3f(r, g, b));
+    }
     public void loadTransformationMatrix(Matrix4f matrix) {
         super.loadMatrix(location_transformationMatrix, matrix);
     }
