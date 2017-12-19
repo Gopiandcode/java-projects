@@ -39,17 +39,16 @@ public class TerrainRenderer {
     private void prepareTerrain(Terrain terrain) {
         RawModel model = terrain.getModel();
         ModelTexture modelTexture = terrain.getTexture();
-        shader.loadShineVariables(modelTexture.getShineDamper(), modelTexture.getReflectivity());
         GL30.glBindVertexArray(model.getVaoID());
         GL20.glEnableVertexAttribArray(0);
         GL20.glEnableVertexAttribArray(1);
         GL20.glEnableVertexAttribArray(2);
+        shader.loadShineVariables(modelTexture.getShineDamper(), modelTexture.getReflectivity());
         GL13.glActiveTexture(GL13.GL_TEXTURE0);
         GL11.glBindTexture(GL11.GL_TEXTURE_2D, modelTexture.getTextureId());
     }
 
     private void loadModelMatrix(Terrain terrain) {
-
         Matrix4f transformationMatrix = Maths.createTransformationMatrix(new Vector3f(terrain.getX(), 0, terrain.getZ()), 0, 0, 0, 1);
         shader.loadTransformationMatrix(transformationMatrix);
     }

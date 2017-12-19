@@ -7,7 +7,7 @@ import com.sun.org.apache.xpath.internal.operations.Mod;
 
 public class Terrain {
 
-    private static final float SIZE = 600;
+    private static final float SIZE = 800;
     private static final int VERTEX_COUNT = 128;
 
     private float x;
@@ -15,10 +15,10 @@ public class Terrain {
     private RawModel model;
     private ModelTexture texture;
 
-    public Terrain(int gridx, int gridz, Loader loader, ModelTexture texture) {
+    public Terrain(int gridX, int gridZ, Loader loader, ModelTexture texture) {
         this.texture = texture;
-        this.x = gridx * SIZE;
-        this.z = gridz * SIZE;
+        this.x = gridX * SIZE;
+        this.z = gridZ * SIZE;
         this.model = generateTerrain(loader);
     }
 
@@ -31,12 +31,12 @@ public class Terrain {
         int vertexPointer = 0;
         for (int i = 0; i < VERTEX_COUNT; i++) {
             for (int j = 0; j < VERTEX_COUNT; j++) {
-                vertices[vertexPointer * 3] = (float) j / ((float) VERTEX_COUNT - 1) * SIZE;
+                vertices[vertexPointer * 3] = (float) j / ((float) (VERTEX_COUNT - 1)) * SIZE;
                 vertices[vertexPointer * 3 + 1] = 0;
-                vertices[vertexPointer * 3 + 2] = (float) i / ((float) VERTEX_COUNT - 1) * SIZE;
+                vertices[vertexPointer * 3 + 2] = (float) i / ((float) (VERTEX_COUNT - 1)) * SIZE;
                 normals[vertexPointer * 3] = 0;
                 normals[vertexPointer * 3 + 1] = 1;
-                normals[vertexPointer * 3 + 2] = 0;
+                normals[vertexPointer * 3 + 2] = 1;
                 textureCoords[vertexPointer * 2] = (float) j / ((float) VERTEX_COUNT - 1);
                 textureCoords[vertexPointer * 2 + 1] = (float) i / ((float) VERTEX_COUNT - 1);
                 vertexPointer++;
