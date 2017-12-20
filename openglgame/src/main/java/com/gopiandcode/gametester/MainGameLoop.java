@@ -3,6 +3,7 @@ package com.gopiandcode.gametester;
 import com.gopiandcode.entity.Camera;
 import com.gopiandcode.entity.Entity;
 import com.gopiandcode.entity.Light;
+import com.gopiandcode.entity.Player;
 import com.gopiandcode.models.TexturedModel;
 import com.gopiandcode.render.*;
 import com.gopiandcode.models.RawModel;
@@ -45,13 +46,22 @@ public class MainGameLoop {
 
         MasterRenderer renderer = new MasterRenderer();
 
+        RawModel bunnyModel = OBJLoader.loadObjModel("bunny", loader);
+        TexturedModel stanfordBunny = new TexturedModel(bunnyModel, new ModelTexture(loader.loadTexture("white")));
+
+        Player player = new Player(stanfordBunny, new Vector3f(5, 0, -25), 0, 0, 0, 1);
+        entities.add(player);
+
+
         while (!Display.isCloseRequested()) {
 
 //            entity.increasePosition(0.0f,0,-0.01f);
             for(Entity entity : entities)
-                entity.increaseRotation(0f, 0.2f, 0.0f);
+                if(entity != player)
+                    entity.increaseRotation(0f, 0.2f, 0.0f);
 
             // game logic
+            player.move();
             camera.move();
 
             for(Terrain terrain : terrains)

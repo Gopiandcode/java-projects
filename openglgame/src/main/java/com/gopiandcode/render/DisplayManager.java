@@ -1,6 +1,7 @@
 package com.gopiandcode.render;
 
 import org.lwjgl.LWJGLException;
+import org.lwjgl.Sys;
 import org.lwjgl.opengl.*;
 
 
@@ -13,6 +14,8 @@ public class DisplayManager {
     private static final int WIDTH = 1280;
     private static final int FPSCAP = 120;
 
+    private static long lastFrameTime;
+    private static float delta;
     public static void createDisplay() {
         ContextAttribs attribs = new ContextAttribs(3, 2)
                 .withForwardCompatible(true)
@@ -28,16 +31,28 @@ public class DisplayManager {
 
         // Tell OPENGL where to draw
         GL11.glViewport(0,0, WIDTH, HEIGHT);
-
-
-
+        lastFrameTime = 0;
+        delta = 0.0f;
     }
     public static void updateDisplay() {
+       long currentFrameTime = getCurrentTime();
+        System.out.println("Current frame time: " + currentFrameTime +  ", last frame time: " + lastFrameTime);
+       delta = (currentFrameTime - lastFrameTime)/(float)Sys.getTimerResolution();
+       lastFrameTime = currentFrameTime;
+
        Display.sync(FPSCAP);
        Display.update();
     }
 
+    public static float getFrameTimeSeconds() {
+        return delta;
+    }
+
     public static void closeDisplay() {
         Display.destroy();
+    }
+
+    private static long getCurrentTime() {
+        return (Sys.getTime());
     }
 }
