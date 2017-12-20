@@ -12,7 +12,6 @@ import com.gopiandcode.terrains.Terrain;
 import com.gopiandcode.textures.ModelTexture;
 import com.gopiandcode.textures.TerrainTexture;
 import com.gopiandcode.textures.TerrainTexturePack;
-import com.gopiandcode.toolbox.Maths;
 import org.joml.Vector3f;
 import org.lwjgl.opengl.Display;
 
@@ -34,7 +33,6 @@ public class MainGameLoop {
         entities.add(createEntityEntity(loader, "tree", "tree", new Vector3f(3, 0, -25), 1, 10));
 
         Light light = new Light(new Vector3f(0, 0, -20), new Vector3f(1, 1, 1));
-        Camera camera = new Camera();
 
         //******************************TERRAIN STUFF ************************************
         List<Terrain> terrains = new ArrayList<>();
@@ -52,6 +50,7 @@ public class MainGameLoop {
         Player player = new Player(stanfordBunny, new Vector3f(5, 0, -25), 0, 0, 0, 1);
         entities.add(player);
 
+        Camera camera = new Camera(player);
 
         while (!Display.isCloseRequested()) {
 

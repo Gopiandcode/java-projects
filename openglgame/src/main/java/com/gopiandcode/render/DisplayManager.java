@@ -36,7 +36,6 @@ public class DisplayManager {
     }
     public static void updateDisplay() {
        long currentFrameTime = getCurrentTime();
-        System.out.println("Current frame time: " + currentFrameTime +  ", last frame time: " + lastFrameTime);
        delta = (currentFrameTime - lastFrameTime)/(float)Sys.getTimerResolution();
        lastFrameTime = currentFrameTime;
 

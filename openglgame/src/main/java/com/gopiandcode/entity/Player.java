@@ -29,9 +29,7 @@ public class Player extends Entity {
     public void move() {
         checkInputs();
         float frameTimeSeconds = DisplayManager.getFrameTimeSeconds();
-        System.out.println("drotation: " + frameTimeSeconds + " * " + currentTurnSpeed);
         float ry = currentTurnSpeed * frameTimeSeconds;
-        System.out.println("drotation: " + ry);
         this.increaseRotation(0, ry, 0);
         float distance = currentSpeed * frameTimeSeconds;
 

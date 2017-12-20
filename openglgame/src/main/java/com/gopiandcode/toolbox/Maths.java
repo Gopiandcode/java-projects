@@ -19,7 +19,8 @@ public class Maths {
         Matrix4f viewMatrix = new Matrix4f()
                 .identity()
                 .rotate((float) Math.toRadians(camera.getPitch()), new Vector3f(1,0,0))
-                .rotation((float) Math.toRadians(camera.getYaw()), new Vector3f(0,1,0))
+                .rotate((float) Math.toRadians(camera.getYaw()), new Vector3f(0,1,0))
+                .rotate((float) Math.toRadians(camera.getRoll()), new Vector3f(0,0,1))
                 .translate(
                         -1 * camera.getPosition().x,
                         -1 * camera.getPosition().y,
