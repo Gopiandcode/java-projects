@@ -3,7 +3,8 @@ package com.gopiandcode.terrains;
 import com.gopiandcode.models.RawModel;
 import com.gopiandcode.render.Loader;
 import com.gopiandcode.textures.ModelTexture;
-import com.sun.org.apache.xpath.internal.operations.Mod;
+import com.gopiandcode.textures.TerrainTexture;
+import com.gopiandcode.textures.TerrainTexturePack;
 
 public class Terrain {
 
@@ -13,13 +14,15 @@ public class Terrain {
     private float x;
     private float z;
     private RawModel model;
-    private ModelTexture texture;
+    private final TerrainTexturePack terrainPack;
+    private final TerrainTexture blendMap;
 
-    public Terrain(int gridX, int gridZ, Loader loader, ModelTexture texture) {
-        this.texture = texture;
+    public Terrain(int gridX, int gridZ, Loader loader, TerrainTexturePack terrainPack, TerrainTexture blendMap) {
         this.x = gridX * SIZE;
         this.z = gridZ * SIZE;
         this.model = generateTerrain(loader);
+        this.terrainPack = terrainPack;
+        this.blendMap = blendMap;
     }
 
     private RawModel generateTerrain(Loader loader) {
@@ -73,7 +76,11 @@ public class Terrain {
         return model;
     }
 
-    public ModelTexture getTexture() {
-        return texture;
+    public TerrainTexturePack getTerrainPack() {
+        return terrainPack;
+    }
+
+    public TerrainTexture getBlendMap() {
+        return blendMap;
     }
 }

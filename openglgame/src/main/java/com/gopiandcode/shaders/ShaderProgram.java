@@ -119,5 +119,9 @@ public abstract class ShaderProgram {
         GL20.glUniformMatrix4(location, false, matrixBuffer);
     }
 
+    protected void loadInt(int location, int value) {
+        GL20.glUniform1i(location, value);
+    }
+
 
 }

@@ -4,6 +4,7 @@ import com.gopiandcode.models.RawModel;
 import com.gopiandcode.shaders.TerrainShader;
 import com.gopiandcode.terrains.Terrain;
 import com.gopiandcode.textures.ModelTexture;
+import com.gopiandcode.textures.TerrainTexturePack;
 import com.gopiandcode.toolbox.Maths;
 import org.joml.Matrix4f;
 import org.joml.Vector3f;
@@ -20,6 +21,7 @@ public class TerrainRenderer {
     public TerrainRenderer(TerrainShader shader, Matrix4f projectionMatrix) {
         this.shader = shader;
         shader.start();
+        shader.connectTextureUnits();
         shader.loadProjectionMatrix(projectionMatrix);
         shader.stop();
     }
@@ -38,16 +40,31 @@ public class TerrainRenderer {
 
     private void prepareTerrain(Terrain terrain) {
         RawModel model = terrain.getModel();
-        ModelTexture modelTexture = terrain.getTexture();
         GL30.glBindVertexArray(model.getVaoID());
         GL20.glEnableVertexAttribArray(0);
         GL20.glEnableVertexAttribArray(1);
         GL20.glEnableVertexAttribArray(2);
-        shader.loadShineVariables(modelTexture.getShineDamper(), modelTexture.getReflectivity());
-        GL13.glActiveTexture(GL13.GL_TEXTURE0);
-        GL11.glBindTexture(GL11.GL_TEXTURE_2D, modelTexture.getTextureId());
+        shader.loadShineVariables(1, 0);
+        bindTextures(terrain);
     }
 
+    private void bindTextures(Terrain terrain) {
+        TerrainTexturePack texturePack = terrain.getTerrainPack();
+        GL13.glActiveTexture(GL13.GL_TEXTURE0);
+        GL11.glBindTexture(GL11.GL_TEXTURE_2D, texturePack.getBackgroundTexture().getTextureId());
+
+        GL13.glActiveTexture(GL13.GL_TEXTURE1);
+        GL11.glBindTexture(GL11.GL_TEXTURE_2D, texturePack.getrTexture().getTextureId());
+
+        GL13.glActiveTexture(GL13.GL_TEXTURE2);
+        GL11.glBindTexture(GL11.GL_TEXTURE_2D, texturePack.getbTexture().getTextureId());
+
+        GL13.glActiveTexture(GL13.GL_TEXTURE3);
+        GL11.glBindTexture(GL11.GL_TEXTURE_2D, texturePack.getgTexture().getTextureId());
+
+        GL13.glActiveTexture(GL13.GL_TEXTURE4);
+        GL11.glBindTexture(GL11.GL_TEXTURE_2D, terrain.getBlendMap().getTextureId());
+    }
     private void loadModelMatrix(Terrain terrain) {
         Matrix4f transformationMatrix = Maths.createTransformationMatrix(new Vector3f(terrain.getX(), 0, terrain.getZ()), 0, 0, 0, 1);
         shader.loadTransformationMatrix(transformationMatrix);

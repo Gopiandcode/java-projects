@@ -9,11 +9,15 @@ import com.gopiandcode.models.RawModel;
 import com.gopiandcode.shaders.StaticShader;
 import com.gopiandcode.terrains.Terrain;
 import com.gopiandcode.textures.ModelTexture;
+import com.gopiandcode.textures.TerrainTexture;
+import com.gopiandcode.textures.TerrainTexturePack;
 import com.gopiandcode.toolbox.Maths;
 import org.joml.Vector3f;
 import org.lwjgl.opengl.Display;
 
 import java.io.File;
+import java.util.ArrayList;
+import java.util.List;
 
 public class MainGameLoop {
     public static void main(String[] args) {
@@ -24,34 +28,37 @@ public class MainGameLoop {
         StaticShader shader = new StaticShader();
 
 
-        RawModel model = OBJLoader.loadObjModel("stall", loader);
-        ModelTexture texture = new ModelTexture(loader.loadTexture("stallTexture"));
+        List<Entity> entities = new ArrayList<>();
+        entities.add(createEntityEntity(loader, "tree", "tree", new Vector3f(0, 0, -25), 1, 10));
+        entities.add(createEntityEntity(loader, "tree", "tree", new Vector3f(3, 0, -25), 1, 10));
 
-        TexturedModel texturedModel = new TexturedModel(model, texture);
-
-        Entity entity = new Entity(texturedModel, new Vector3f(0,2,-25), 0,0,0,1);
-        Light light = new Light(new Vector3f(0,0,-20), new Vector3f(1,1,1));
+        Light light = new Light(new Vector3f(0, 0, -20), new Vector3f(1, 1, 1));
         Camera camera = new Camera();
 
-        Terrain terrain = new Terrain(0, -1, loader, new ModelTexture(loader.loadTexture("image")));
-        Terrain terrain2 = new Terrain(-1, -1, loader, new ModelTexture(loader.loadTexture("image")));
+        //******************************TERRAIN STUFF ************************************
+        List<Terrain> terrains = new ArrayList<>();
+        terrains.add(createTerrain(loader, 0, -1));
+        terrains.add(createTerrain(loader, -1, -1));
 
-        texture.setReflectivity(1);
-        texture.setShineDamper(10);
+        //********************************************************************************
+
 
         MasterRenderer renderer = new MasterRenderer();
 
-        while(!Display.isCloseRequested()) {
+        while (!Display.isCloseRequested()) {
 
 //            entity.increasePosition(0.0f,0,-0.01f);
-            entity.increaseRotation(0f,0.2f,0.0f);
+            for(Entity entity : entities)
+                entity.increaseRotation(0f, 0.2f, 0.0f);
 
             // game logic
             camera.move();
 
-            renderer.processTerrain(terrain);
-            renderer.processTerrain(terrain2);
-            renderer.processEntity(entity);
+            for(Terrain terrain : terrains)
+                renderer.processTerrain(terrain);
+
+            for(Entity entity: entities)
+                renderer.processEntity(entity);
 
 
             // game rendering
@@ -64,6 +71,27 @@ public class MainGameLoop {
         loader.cleanUp();
 
         DisplayManager.closeDisplay();
+    }
+
+    private static Terrain createTerrain(Loader loader, int gridX, int gridZ) {
+        TerrainTexture backgroundTexture = new TerrainTexture(loader.loadTexture("grassy"));
+        TerrainTexture rTexture = new TerrainTexture(loader.loadTexture("dirt"));
+        TerrainTexture gTexture = new TerrainTexture(loader.loadTexture("pinkFlowers"));
+        TerrainTexture bTexture = new TerrainTexture(loader.loadTexture("path"));
+
+
+        TerrainTexturePack texturePack = new TerrainTexturePack(backgroundTexture, rTexture, gTexture, bTexture);
+        TerrainTexture blendMap = new TerrainTexture(loader.loadTexture("blendMap"));
+
+        return new Terrain(gridX, gridZ, loader, texturePack, blendMap);
+    }
+
+    private static Entity createEntityEntity(Loader loader, String tree, String stallTexture, Vector3f position, int reflectivity, int shineDamper) {
+        ModelTexture texture = new ModelTexture(loader.loadTexture(stallTexture));
+        TexturedModel texturedModel = new TexturedModel(OBJLoader.loadObjModel(tree, loader), texture);
+        texture.setReflectivity(reflectivity);
+        texture.setShineDamper(shineDamper);
+        return new Entity(texturedModel, position, 0, 0, 0, 1);
     }
 
 
