@@ -2,6 +2,7 @@ package com.gopiandcode.entity;
 
 import com.gopiandcode.models.TexturedModel;
 import com.gopiandcode.render.DisplayManager;
+import com.gopiandcode.terrains.Terrain;
 import org.joml.Vector3f;
 import org.lwjgl.input.Keyboard;
 
@@ -26,7 +27,7 @@ public class Player extends Entity {
         super(model, position, rotX, rotY, rotZ, scale);
     }
 
-    public void move() {
+    public void move(Terrain terrain) {
         checkInputs();
         float frameTimeSeconds = DisplayManager.getFrameTimeSeconds();
         float ry = currentTurnSpeed * frameTimeSeconds;
@@ -36,8 +37,9 @@ public class Player extends Entity {
         upwardsSpeed += GRAVITY * DisplayManager.getFrameTimeSeconds();
         super.increasePosition(0, upwardsSpeed * DisplayManager.getFrameTimeSeconds(), 0);
 
-        if(super.getPosition().y < TERRAIN_HEIGHT) {
-            super.getPosition().y = TERRAIN_HEIGHT;
+        float terrainHeight = terrain.getHeightOfTerrain(getPosition().x, getPosition().z);
+        if(super.getPosition().y < terrainHeight) {
+            super.getPosition().y = terrainHeight;
             upwardsSpeed = 0;
             isInAir = false;
         }

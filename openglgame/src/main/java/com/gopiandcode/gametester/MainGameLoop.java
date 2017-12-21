@@ -37,7 +37,7 @@ public class MainGameLoop {
         //******************************TERRAIN STUFF ************************************
         List<Terrain> terrains = new ArrayList<>();
         terrains.add(createTerrain(loader, 0, -1, "heightmap"));
-        terrains.add(createTerrain(loader, -1, -1, "heightmap"));
+//        terrains.add(createTerrain(loader, -1, -1, "heightmap"));
 
         //********************************************************************************
 
@@ -60,8 +60,8 @@ public class MainGameLoop {
                     entity.increaseRotation(0f, 0.2f, 0.0f);
 
             // game logic
-            player.move();
-            camera.move();
+            player.move(terrains.get(0));
+            camera.move(terrains.get(0));
 
             for(Terrain terrain : terrains)
                 renderer.processTerrain(terrain);

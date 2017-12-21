@@ -1,5 +1,6 @@
 package com.gopiandcode.entity;
 
+import com.gopiandcode.terrains.Terrain;
 import org.joml.Vector3f;
 import org.lwjgl.input.Mouse;
 
@@ -13,7 +14,7 @@ public class Camera {
     private float distanceFromPlayer = 50;
     private float angleAroundPlayer = 0;
 
-    public void move() {
+    public void move(Terrain terrain) {
         calculateZoom();
         calculateAngle();
         calculatePitch();
@@ -21,7 +22,7 @@ public class Camera {
         float horizontalDistance = calculateHorizontalDistance();
         float verticalDistance = calculateVerticalDistance();
 
-        calculateCameraPosition(horizontalDistance, verticalDistance);
+        calculateCameraPosition(horizontalDistance, verticalDistance, terrain);
         this.yaw = 180 - (player.getRotY() + angleAroundPlayer);
     }
 
@@ -31,7 +32,7 @@ public class Camera {
         this.yaw = 0;
         this.roll = 0;
     }
-    private void calculateCameraPosition(float horizontalDistance, float verticalDistance) {
+    private void calculateCameraPosition(float horizontalDistance, float verticalDistance, Terrain terrain) {
         float theta = player.getRotY() + angleAroundPlayer;
 
         float offsetX = (float) (horizontalDistance * Math.sin(Math.toRadians(theta)));
@@ -44,7 +45,12 @@ public class Camera {
         System.out.println("pitches: " +pitch+ ", " + roll+ "," +  yaw);
         position.x = player.getPosition().x - offsetX;
         position.z = player.getPosition().z - offsetZ;
-        position.y = player.getPosition().y + verticalDistance;
+        float heightOfTerrain = terrain.getHeightOfTerrain(position.x, position.z);
+        System.out.println(heightOfTerrain);
+        float max = Math.max(player.getPosition().y + verticalDistance, heightOfTerrain);
+        System.out.println("max is " + max);
+        if(Float.isNaN(max)) max = 0.0f;
+        position.y = (float) max;
     }
 
     public Vector3f getPosition() {
