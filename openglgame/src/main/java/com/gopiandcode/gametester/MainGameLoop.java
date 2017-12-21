@@ -36,8 +36,8 @@ public class MainGameLoop {
 
         //******************************TERRAIN STUFF ************************************
         List<Terrain> terrains = new ArrayList<>();
-        terrains.add(createTerrain(loader, 0, -1));
-        terrains.add(createTerrain(loader, -1, -1));
+        terrains.add(createTerrain(loader, 0, -1, "heightmap"));
+        terrains.add(createTerrain(loader, -1, -1, "heightmap"));
 
         //********************************************************************************
 
@@ -82,7 +82,7 @@ public class MainGameLoop {
         DisplayManager.closeDisplay();
     }
 
-    private static Terrain createTerrain(Loader loader, int gridX, int gridZ) {
+    private static Terrain createTerrain(Loader loader, int gridX, int gridZ, String heightmap) {
         TerrainTexture backgroundTexture = new TerrainTexture(loader.loadTexture("grassy"));
         TerrainTexture rTexture = new TerrainTexture(loader.loadTexture("dirt"));
         TerrainTexture gTexture = new TerrainTexture(loader.loadTexture("pinkFlowers"));
@@ -92,7 +92,7 @@ public class MainGameLoop {
         TerrainTexturePack texturePack = new TerrainTexturePack(backgroundTexture, rTexture, gTexture, bTexture);
         TerrainTexture blendMap = new TerrainTexture(loader.loadTexture("blendMap"));
 
-        return new Terrain(gridX, gridZ, loader, texturePack, blendMap);
+        return new Terrain(gridX, gridZ, loader, texturePack, blendMap, heightmap);
     }
 
     private static Entity createEntityEntity(Loader loader, String tree, String stallTexture, Vector3f position, int reflectivity, int shineDamper) {
