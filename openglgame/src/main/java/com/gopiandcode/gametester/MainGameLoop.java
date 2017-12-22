@@ -32,7 +32,10 @@ public class MainGameLoop {
         entities.add(createEntityEntity(loader, "tree", "tree", new Vector3f(0, 0, -25), 1, 10));
         entities.add(createEntityEntity(loader, "tree", "tree", new Vector3f(3, 0, -25), 1, 10));
 
-        Light light = new Light(new Vector3f(0, 0, -20), new Vector3f(1, 1, 1));
+        List<Light> light = new ArrayList<>();
+        light.add(new Light(new Vector3f(0, 0, -20), new Vector3f(1, 1, 1), new Vector3f(1.0f,0.01f,0.002f)));
+        light.add(new Light(new Vector3f(10, 10, -70), new Vector3f(0.8f, 0.8f, 0.8f)));
+        light.add(new Light(new Vector3f(30, 40, -50), new Vector3f(1, 1, 1),new Vector3f(1.0f,0.01f,0.002f)));
 
         //******************************TERRAIN STUFF ************************************
         List<Terrain> terrains = new ArrayList<>();

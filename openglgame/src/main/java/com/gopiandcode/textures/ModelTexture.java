@@ -5,6 +5,7 @@ public class ModelTexture {
     private float shineDamper = 1;
     private boolean hasTrasnparency = false;
     private boolean useFakeLighting = false;
+    private int numberOfRows = 1;
 
     public boolean shouldUseFakeLighting() {
         return useFakeLighting;
@@ -24,6 +25,14 @@ public class ModelTexture {
 
     public float getShineDamper() {
         return shineDamper;
+    }
+
+    public int getNumberOfRows() {
+        return numberOfRows;
+    }
+
+    public void setNumberOfRows(int numberOfRows) {
+        this.numberOfRows = numberOfRows;
     }
 
     public void setShineDamper(float shineDamper) {

@@ -73,11 +73,11 @@ public class MasterRenderer {
     public static void disableCulling() {
         GL11.glDisable(GL11.GL_CULL_FACE);
     }
-    public void render(Light sun, Camera camera) {
+    public void render(List<Light> sun, Camera camera) {
         prepare();
         shader.start();
         shader.loadSkyColour(RED, GREEN,BLUE);
-        shader.loadLight(sun);
+        shader.loadLights(sun);
         shader.loadViewMatrix(camera);
         renderer.render(entities);
         shader.stop();

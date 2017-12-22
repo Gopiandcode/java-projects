@@ -177,18 +177,20 @@ public class Terrain {
         float xCoord = (terrainX % gridSquareSize);
         float zCoord = (terrainZ % gridSquareSize);
         float answer;
-        if(xCoord <= (1 - zCoord)) {
-            answer = Maths.barryCentric(new Vector3f(0, heights[gridX][gridZ],0),
-                    new Vector3f(1, heights[gridX + 1][gridZ], 0), new Vector3f(0, heights[gridX][gridZ + 1], 1),
-                    new Vector2f(xCoord, zCoord));
-        } else {
-            answer = Maths.barryCentric(
-                    new Vector3f(1, heights[gridX + 1][gridZ ], 1),
-                    new Vector3f(1, heights[gridX + 1][gridZ + 1], 1),
-                    new Vector3f(0, heights[gridX][gridZ+1],1),
-                    new Vector2f(xCoord, zCoord)
-            );
-        }
+		if (xCoord <= (1-zCoord)) {
+			answer = Maths
+					.barryCentric(
+					        new Vector3f(0, heights[gridX][gridZ], 0),
+                            new Vector3f(1, heights[gridX + 1][gridZ], 0),
+                            new Vector3f(0, heights[gridX][gridZ + 1], 1),
+                            new Vector2f(xCoord, zCoord));
+		} else {
+			answer = Maths
+					.barryCentric(
+					        new Vector3f(1, heights[gridX + 1][gridZ], 0),
+                            new Vector3f(1, heights[gridX + 1][gridZ + 1], 1),
+                            new Vector3f(0, heights[gridX][gridZ + 1], 1), new Vector2f(xCoord, zCoord));
+		}
 
         if(Float.isNaN(answer)) answer = 0.0f;
         return answer;

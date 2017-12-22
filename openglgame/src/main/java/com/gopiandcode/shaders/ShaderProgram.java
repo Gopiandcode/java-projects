@@ -1,6 +1,7 @@
 package com.gopiandcode.shaders;
 
 import org.joml.Matrix4f;
+import org.joml.Vector2f;
 import org.joml.Vector3f;
 import org.lwjgl.BufferUtils;
 import org.lwjgl.opengl.GL11;
@@ -110,6 +111,9 @@ public abstract class ShaderProgram {
         GL20.glUniform1f(location, toLoad);
     }
 
+    protected void load2DVector(int location, Vector2f vector) {
+        GL20.glUniform2f(location, vector.x, vector.y);
+    }
 
     protected void loadMatrix(int location, Matrix4f matrix){
         matrixBuffer.clear();
