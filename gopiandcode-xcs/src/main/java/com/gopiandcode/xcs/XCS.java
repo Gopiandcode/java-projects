@@ -4,6 +4,8 @@ import java.util.*;
 import java.util.concurrent.ThreadLocalRandom;
 import java.util.stream.Collectors;
 
+import static java.util.concurrent.ThreadLocalRandom.current;
+
 enum BinaryAlphabet {
     ONE, ZERO
 }
@@ -32,11 +34,26 @@ class Action {
     }
 
     public static Action createRandom() {
-        if(ThreadLocalRandom.current().nextInt(0,1) == 0) {
+        if(current().nextInt(0,1) == 0) {
            return getZeroClassification();
         } else {
             return getOneClassification();
         }
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+
+        Action action = (Action) o;
+
+        return classification == action.classification;
+    }
+
+    @Override
+    public int hashCode() {
+        return classification.hashCode();
     }
 }
 
@@ -97,7 +114,7 @@ class Condition {
         for (int i = 0; i < size; i++) {
 
             TernaryAlphabet value = TernaryAlphabet.ONE;
-            switch (ThreadLocalRandom.current().nextInt(0, 3)) {
+            switch (current().nextInt(0, 3)) {
                 case 0:
                     value = TernaryAlphabet.ZERO;
                     break;
@@ -120,8 +137,8 @@ class Condition {
         for (int i = 0; i < size; i++) {
 
             TernaryAlphabet value = TernaryAlphabet.HASH;
-            if (ThreadLocalRandom.current().nextDouble() > P_hash) {
-                switch (ThreadLocalRandom.current().nextInt(0, 2)) {
+            if (current().nextDouble() > P_hash) {
+                switch (current().nextInt(0, 2)) {
                     case 0:
                         value = TernaryAlphabet.ZERO;
                         break;
@@ -135,6 +152,29 @@ class Condition {
             ternaryAlphabets[i] = value;
         }
         return new Condition(ternaryAlphabets);
+    }
+
+    public static Condition createCovering(Situation sigma, double p_hash) {
+        BinaryAlphabet[] sigmaValues = sigma.getValues();
+        TernaryAlphabet[] values = new TernaryAlphabet[sigmaValues.length];
+
+        for(int i = 0; i < values.length; i++) {
+            if(current().nextDouble() < p_hash) {
+                // x <- #
+                values[i] = TernaryAlphabet.HASH;
+            } else {
+                // x <- the corresponding value in sigmah
+                switch(sigmaValues[i]) {
+                    case ONE:
+                        values[i] = TernaryAlphabet.ONE;
+                        break;
+                    case ZERO:
+                        values[i] = TernaryAlphabet.ZERO;
+                        break;
+                }
+            }
+        }
+        return new Condition(values);
     }
 }
 
@@ -169,7 +209,7 @@ class Situation {
         BinaryAlphabet[] binaryAlphabets = new BinaryAlphabet[size];
         for (int i = 0; i < size; i++) {
             BinaryAlphabet value;
-            switch (ThreadLocalRandom.current().nextInt(0, 2)) {
+            switch (current().nextInt(0, 2)) {
                 case 0:
                     value = BinaryAlphabet.ZERO;
                     break;
@@ -245,7 +285,7 @@ class Environment {
             } else {
                 stepIndex = 0;
                 problemIndex++;
-                return getSituation();
+                return getSituation(timestep);
             }
         } else {
             return Optional.empty();
@@ -292,81 +332,177 @@ class Classifier {
      * the number of microclassifiers this classifier represents
      */
     private double n;
+    private boolean initialized;
 
-    public Classifier(Condition condition, Action action, double p, double e, double f, double exp, long ts, double as, double n) {
+    public Classifier(Condition condition, Action action) {
         this.condition = condition;
         this.action = action;
-        this.p = p;
-        this.e = e;
-        this.f = f;
-        this.exp = exp;
-        this.ts = ts;
-        this.as = as;
-        this.n = n;
+        this.p = 0;
+        this.e = 0;
+        this.f = 0;
+        this.exp = 0;
+        this.ts = 0;
+        this.as = 0;
+        this.n = 0;
+        initialized = false;
+    }
+
+    private void checkInitialization() {
+        if(!initialized)
+            throw new RuntimeException("Classifier used before initialization");
     }
 
     public Condition getCondition() {
+        checkInitialization();
         return condition;
     }
 
     public void setCondition(Condition condition) {
+        checkInitialization();
         this.condition = condition;
     }
 
     public Action getAction() {
+        checkInitialization();
         return action;
     }
 
     public void setAction(Action action) {
+        checkInitialization();
         this.action = action;
     }
 
     public double getP() {
+        checkInitialization();
         return p;
     }
 
     public void setP(double p) {
+        checkInitialization();
         this.p = p;
     }
 
     public double getE() {
+        checkInitialization();
         return e;
     }
 
     public void setE(double e) {
+        checkInitialization();
         this.e = e;
     }
 
     public double getExp() {
+        checkInitialization();
         return exp;
     }
 
     public void setExp(double exp) {
+        checkInitialization();
         this.exp = exp;
     }
 
     public long getTs() {
+        checkInitialization();
         return ts;
     }
 
     public void setTs(long ts) {
+        checkInitialization();
         this.ts = ts;
     }
 
     public double getAs() {
+        checkInitialization();
         return as;
     }
 
     public void setAs(double as) {
+        checkInitialization();
         this.as = as;
     }
 
     public double getN() {
+        checkInitialization();
         return n;
     }
 
     public void setN(double n) {
+        checkInitialization();
         this.n = n;
+    }
+
+    public double getF() {
+        return f;
+    }
+
+    public void setF(double f) {
+        this.f = f;
+    }
+
+    public boolean matches(Situation sigma) {
+        checkInitialization();
+        return this.condition.matches(sigma);
+    }
+
+    public static Classifier coverSituation(Situation sigma, Action action, double P_hash) {
+        return new Classifier(Condition.createCovering(sigma, P_hash), action);
+    }
+
+    public void initialize(double p_I, double e_I, double F_I, long t) {
+        this.p = p_I;
+        this.e = e_I;
+        this.f = F_I;
+        this.exp = 0;
+        this.ts = t;
+        this.n = 1;
+        this.as = 1;
+        this.initialized = true;
+    }
+}
+
+class PredictionArray {
+    private final Map<Action,Double> predictionArray;
+
+    PredictionArray(Map<Action, Double> predictionArray) {
+        this.predictionArray = predictionArray;
+    }
+
+
+    public double findMax() {
+        return predictionArray.values().stream().max(Double::compare).orElse(0.0);
+    }
+
+    public static PredictionArray generatePredictionArray(List<Classifier> M){
+            Map<Action, Double> pa = new LinkedHashMap<>();
+            Map<Action, Double> fsa = new HashMap<>();
+            for(Classifier cl : M) {
+               pa.put(cl.getAction(), pa.getOrDefault(cl.getAction(), 0.0) + cl.getP() * cl.getF());
+                fsa.put(cl.getAction(), fsa.getOrDefault(cl.getAction(), 0.0) + cl.getF());
+            }
+
+            for(Action a : fsa.keySet()) {
+                pa.put(a, pa.get(a) / fsa.get(a));
+            }
+            return new PredictionArray(pa);
+    }
+
+    public Action selectRandomAction() {
+        List<Action> actions = new ArrayList<>(predictionArray.keySet());
+        int size = predictionArray.keySet().size();
+        return actions.get(ThreadLocalRandom.current().nextInt(0, size));
+    }
+
+    public Action selectBestAction() {
+        Optional<Action> bestSeen = Optional.empty();
+        Optional<Double> bestScore = Optional.empty();
+        for (Map.Entry<Action, Double> actionDoubleEntry : predictionArray.entrySet()) {
+            if(!bestScore.isPresent()|| bestScore.get() < actionDoubleEntry.getValue()) {
+                bestScore = Optional.of(actionDoubleEntry.getValue());
+                bestSeen = Optional.of(actionDoubleEntry.getKey());
+            }
+        }
+        return bestSeen.get();
     }
 }
 
@@ -534,14 +670,8 @@ public class XCS {
         for(int i = 0; i < this.N; i++) {
             this.P.add(new Classifier(
                     Condition.createRandom(env.getProblemSize(), this.P_sharp),
-                    Action.createRandom(),
-                    this.p_I,
-                    this.e_I,
-                    this.F_I,
-                    0,
-                    0,
-                    0,
-                    1));
+                    Action.createRandom())
+            );
         }
     }
 
@@ -601,19 +731,117 @@ public class XCS {
 
     private void generateActionSet(Action act) {
         // TODO: GENERATE ACTION SET out of [M] according to act
+        this.A.clear();
+        for(Classifier cl : this.M) {
+            if(cl.getAction().equals(act)) {
+                this.A.add(cl);
+            }
+        }
     }
 
     private Action selectActionUsing(PredictionArray PA) {
-        // TODO: SELECT ACTION according to PA
-        return null;
+        if(current().nextDouble() < this.p_explr) {
+            return PA.selectRandomAction();
+        } else {
+            return PA.selectBestAction();
+        }
     }
 
     private PredictionArray generatePredictionArray() {
-        // TODO: PA <- generate prediction array out of [M]
-        return null;
+        return PredictionArray.generatePredictionArray(this.M);
     }
 
     private void generateMatchSet(Situation sigma) {
         // TODO: [M] <- Generate Match set out of [P] using Sigma
+        this.M.clear();
+        while(this.M.isEmpty()) {
+            for(Classifier cl : this.P) {
+                if(cl.matches(sigma)) {
+                    this.M.add(cl);
+                }
+            }
+
+            if(this.M.size() < this.theta_mna) {
+                Classifier cl_c = this.generateCoveringClassifier(sigma);
+                this.deleteFromPopulation();
+                this.M.clear();
+            }
+        }
+    }
+
+    private Classifier generateCoveringClassifier(Situation sigma) {
+        Classifier classifer = Classifier.coverSituation(sigma, this.selectActionFromMatchSet(), this.P_sharp);
+        classifer.initialize(this.p_I, this.e_I, this.F_I, this.t);
+        return classifer;
+    }
+
+    private Action selectActionFromMatchSet() {
+        Set<Action> actionsInM = new HashSet<>();
+        for(Classifier cl : this.M) {
+            actionsInM.add(cl.getAction());
+        }
+
+        Action oneClassification = Action.getOneClassification();
+        Action zeroClassification = Action.getZeroClassification();
+        if(actionsInM.contains(oneClassification) && ! actionsInM.contains(zeroClassification)) {
+           return zeroClassification;
+        } else if(actionsInM.contains(zeroClassification) && !actionsInM.contains(oneClassification)){
+            return oneClassification;
+        } else {
+            return Action.createRandom();
+        }
+    }
+
+    private void deleteFromPopulation() {
+        long populationSize = this.getPopulationSize();
+        if(populationSize < this.N) {
+           return;
+        }
+        double averagePopulationFitness = getAveragePopulationFitness(populationSize);
+        double votesum = 0.0;
+        for(Classifier cl : this.P) {
+            votesum += this.getDeletionVoteFor(cl, averagePopulationFitness);
+        }
+        double choicePoint = ThreadLocalRandom.current().nextDouble() * votesum;
+        votesum = 0;
+        for(Classifier cl : this.P) {
+            votesum += this.getDeletionVoteFor(cl, averagePopulationFitness);
+            if(votesum > choicePoint) {
+                if(cl.getN() > 1) {
+                    cl.setN(cl.getN()-1);
+                } else {
+                    this.P.remove(cl);
+                }
+                return;
+            }
+        }
+    }
+
+    private double getDeletionVoteFor(Classifier cl, double averagePopulationFitness) {
+        double vote = cl.getAs() * cl.getN();
+        if(cl.getExp() > this.theta_del && cl.getF()/ cl.getN() < this.delta * averagePopulationFitness) {
+            vote *= averagePopulationFitness / (cl.getF()/cl.getN());
+        }
+        return vote;
+    }
+
+    private double getAveragePopulationFitness() {
+        return getAveragePopulationFitness(getPopulationSize());
+    }
+
+    private double getAveragePopulationFitness(long populationSize) {
+        double totalFitness = 0;
+        for(Classifier cl : this.P) {
+           totalFitness += cl.getF();
+        }
+       return totalFitness / populationSize;
+    }
+
+    private long getPopulationSize() {
+        long size = 0;
+        for(Classifier cl : this.P) {
+            size += cl.getN();
+        }
+        return size;
     }
 }
