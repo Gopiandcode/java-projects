@@ -34,8 +34,8 @@ class Action {
     }
 
     public static Action createRandom() {
-        if(current().nextInt(0,1) == 0) {
-           return getZeroClassification();
+        if (current().nextInt(0, 1) == 0) {
+            return getZeroClassification();
         } else {
             return getOneClassification();
         }
@@ -54,6 +54,10 @@ class Action {
     @Override
     public int hashCode() {
         return classification.hashCode();
+    }
+
+    public static Action copy(Action action) {
+        return new Action(action.classification);
     }
 }
 
@@ -109,6 +113,10 @@ class Condition {
         return true;
     }
 
+    public long hashCount() {
+        return Arrays.stream(values).filter(ternaryAlphabet -> ternaryAlphabet == TernaryAlphabet.HASH).map(ternaryAlphabet -> 1).reduce(Integer::sum).orElse(0);
+    }
+
     public static Condition createRandom(int size) {
         TernaryAlphabet[] ternaryAlphabets = new TernaryAlphabet[size];
         for (int i = 0; i < size; i++) {
@@ -158,13 +166,13 @@ class Condition {
         BinaryAlphabet[] sigmaValues = sigma.getValues();
         TernaryAlphabet[] values = new TernaryAlphabet[sigmaValues.length];
 
-        for(int i = 0; i < values.length; i++) {
-            if(current().nextDouble() < p_hash) {
+        for (int i = 0; i < values.length; i++) {
+            if (current().nextDouble() < p_hash) {
                 // x <- #
                 values[i] = TernaryAlphabet.HASH;
             } else {
                 // x <- the corresponding value in sigmah
-                switch(sigmaValues[i]) {
+                switch (sigmaValues[i]) {
                     case ONE:
                         values[i] = TernaryAlphabet.ONE;
                         break;
@@ -175,6 +183,32 @@ class Condition {
             }
         }
         return new Condition(values);
+    }
+
+    public static Condition copy(Condition condition) {
+       return new Condition(Arrays.copyOf(condition.getValues(), condition.getValues().length));
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+
+        Condition condition = (Condition) o;
+
+        // Probably incorrect - comparing Object[] arrays with Arrays.equals
+        if(values.length != condition.values.length)
+            return false;
+        for(int i = 0; i < values.length; i++) {
+            if(values[i] != condition.values[i])
+                return false;
+        }
+        return true;
+    }
+
+    @Override
+    public int hashCode() {
+        return Arrays.hashCode(values);
     }
 }
 
@@ -348,7 +382,7 @@ class Classifier {
     }
 
     private void checkInitialization() {
-        if(!initialized)
+        if (!initialized)
             throw new RuntimeException("Classifier used before initialization");
     }
 
@@ -459,10 +493,101 @@ class Classifier {
         this.as = 1;
         this.initialized = true;
     }
+
+    public static Classifier copy(Classifier original) {
+       Classifier copy = new Classifier(Condition.copy(original.getCondition()), Action.copy(original.getAction()));
+       copy.initialize(
+               original.getP(),
+               original.getE(),
+               original.getF(),
+               original.getTs()
+       );
+       copy.setExp(original.getExp());
+       copy.setN(original.getN());
+       copy.setAs(original.getAs());
+       return copy;
+    }
+
+    public static void applyCrossover(Classifier child1, Classifier child2) {
+        double x = ThreadLocalRandom.current().nextDouble() * (child1.getCondition().getValues().length + 1);
+        double y = ThreadLocalRandom.current().nextDouble() * (child1.getCondition().getValues().length + 1);
+        if(x > y) {
+            double temp = x;
+            x = y;
+            y = temp;
+        }
+
+        int i = 0;
+        do {
+            if(x <= i && i < y) {
+                TernaryAlphabet temp = child1.getCondition().getValues()[i];
+                child1.getCondition().getValues()[i] = child2.getCondition().getValues()[i];
+                child2.getCondition().getValues()[i] = temp;
+            }
+            i++;
+        } while(i < y);
+
+        child1.initialized = false;
+        child2.initialized = false;
+    }
+
+    public void mutate(Situation sigma, double mew) {
+        int i = 0;
+        do {
+            if(ThreadLocalRandom.current().nextDouble() < mew) {
+               if(condition.getValues()[i] == TernaryAlphabet.HASH) {
+                   switch(sigma.getValues()[i]) {
+                       case ONE:
+                           condition.getValues()[i] = TernaryAlphabet.ONE;
+                           break;
+                       case ZERO:
+                           condition.getValues()[i] = TernaryAlphabet.ONE;
+                           break;
+                   }
+               }
+            }
+            i++;
+        } while(i < condition.getValues().length);
+    }
+
+    public boolean isSame(Classifier cl) {
+        return cl.condition.equals(condition) && cl.action.equals(cl.action);
+    }
+    public static boolean couldSubsume(Classifier cl, double theta_sub, double epsilon_nought) {
+        if(cl.getExp() > theta_sub) {
+            if(cl.getE() < epsilon_nought) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    public static boolean isMoreGeneral(Classifier general, Classifier specific) {
+        if(general.getCondition().hashCount() <= specific.getCondition().hashCount()) return false;
+        int i = 0;
+        TernaryAlphabet[] generalValues = general.getCondition().getValues();
+        TernaryAlphabet[] specificValues = specific.getCondition().getValues();
+        do {
+            TernaryAlphabet genI = generalValues[i];
+            TernaryAlphabet specI = specificValues[i];
+            if(genI != TernaryAlphabet.HASH && genI != specI)
+                return false;
+            i++;
+        } while(i < generalValues.length);
+        return true;
+    }
+
+    public static boolean doesSubsume(Classifier sub, Classifier tos,  double theta_sub, double epsilon_nought) {
+        if(sub.getAction() == tos.getAction())
+            if(Classifier.couldSubsume(sub, theta_sub, epsilon_nought))
+                if(Classifier.isMoreGeneral(sub, tos))
+                    return true;
+        return false;
+    }
 }
 
 class PredictionArray {
-    private final Map<Action,Double> predictionArray;
+    private final Map<Action, Double> predictionArray;
 
     PredictionArray(Map<Action, Double> predictionArray) {
         this.predictionArray = predictionArray;
@@ -473,18 +598,18 @@ class PredictionArray {
         return predictionArray.values().stream().max(Double::compare).orElse(0.0);
     }
 
-    public static PredictionArray generatePredictionArray(List<Classifier> M){
-            Map<Action, Double> pa = new LinkedHashMap<>();
-            Map<Action, Double> fsa = new HashMap<>();
-            for(Classifier cl : M) {
-               pa.put(cl.getAction(), pa.getOrDefault(cl.getAction(), 0.0) + cl.getP() * cl.getF());
-                fsa.put(cl.getAction(), fsa.getOrDefault(cl.getAction(), 0.0) + cl.getF());
-            }
+    public static PredictionArray generatePredictionArray(List<Classifier> M) {
+        Map<Action, Double> pa = new LinkedHashMap<>();
+        Map<Action, Double> fsa = new HashMap<>();
+        for (Classifier cl : M) {
+            pa.put(cl.getAction(), pa.getOrDefault(cl.getAction(), 0.0) + cl.getP() * cl.getF());
+            fsa.put(cl.getAction(), fsa.getOrDefault(cl.getAction(), 0.0) + cl.getF());
+        }
 
-            for(Action a : fsa.keySet()) {
-                pa.put(a, pa.get(a) / fsa.get(a));
-            }
-            return new PredictionArray(pa);
+        for (Action a : fsa.keySet()) {
+            pa.put(a, pa.get(a) / fsa.get(a));
+        }
+        return new PredictionArray(pa);
     }
 
     public Action selectRandomAction() {
@@ -497,7 +622,7 @@ class PredictionArray {
         Optional<Action> bestSeen = Optional.empty();
         Optional<Double> bestScore = Optional.empty();
         for (Map.Entry<Action, Double> actionDoubleEntry : predictionArray.entrySet()) {
-            if(!bestScore.isPresent()|| bestScore.get() < actionDoubleEntry.getValue()) {
+            if (!bestScore.isPresent() || bestScore.get() < actionDoubleEntry.getValue()) {
                 bestScore = Optional.of(actionDoubleEntry.getValue());
                 bestSeen = Optional.of(actionDoubleEntry.getKey());
             }
@@ -667,8 +792,8 @@ public class XCS {
     }
 
     public void initializeXCS() {
-        for(int i = 0; i < this.N; i++) {
-            this.P.add(new Classifier(
+        for (int i = 0; i < this.N; i++) {
+            this.insertIntoPopulation(new Classifier(
                     Condition.createRandom(env.getProblemSize(), this.P_sharp),
                     Action.createRandom())
             );
@@ -676,33 +801,33 @@ public class XCS {
     }
 
     public boolean runSingleTrainIteration() {
-            Optional<Situation> nextSituation = env.getSituation(this.t);
-            if(!nextSituation.isPresent()) {
-                return false;
-            }
-            Situation sigma = nextSituation.get();
-            this.generateMatchSet(sigma);
-            PredictionArray PA = this.generatePredictionArray();
-            Action act = this.selectActionUsing(PA);
-            this.generateActionSet(act);
-            double p = rp.getRewardForAction(sigma, act);
-            if(this.A_1.size() > 0) {
-                double Ptemp = this.p_1 + this.gamma * PA.findMax();
-                this.updateLastActionSet(Ptemp);
-                this.runGAOnLastActionSet(this.sigma_1);
-            }
-            if(env.isEndOfProblem()) {
-                double Ptemp = p;
-                this.updateCurrentActionSet(Ptemp);
-                this.runGAOnCurrentActionSet(sigma);
-                this.A_1.clear();
-            } else {
-                this.A_1.addAll(this.A);
-                this.p_1 = p;
-                this.sigma_1 = sigma;
-            }
+        Optional<Situation> nextSituation = env.getSituation(this.t);
+        if (!nextSituation.isPresent()) {
+            return false;
+        }
+        Situation sigma = nextSituation.get();
+        this.generateMatchSet(sigma);
+        PredictionArray PA = this.generatePredictionArray();
+        Action act = this.selectActionUsing(PA);
+        this.generateActionSet(act);
+        double p = rp.getRewardForAction(sigma, act);
+        if (this.A_1.size() > 0) {
+            double Ptemp = this.p_1 + this.gamma * PA.findMax();
+            this.updateLastActionSet(Ptemp);
+            this.runGAOnLastActionSet(this.sigma_1);
+        }
+        if (env.isEndOfProblem()) {
+            double Ptemp = p;
+            this.updateCurrentActionSet(Ptemp);
+            this.runGAOnCurrentActionSet(sigma);
+            this.A_1.clear();
+        } else {
+            this.A_1.addAll(this.A);
+            this.p_1 = p;
+            this.sigma_1 = sigma;
+        }
 
-            return true;
+        return true;
     }
 
     private void runGAOnLastActionSet(Situation sigma_1) {
@@ -713,10 +838,6 @@ public class XCS {
         this.runGAOnActionSet(this.A, sigma);
     }
 
-    private void runGAOnActionSet(List<Classifier> a, Situation sigma_1) {
-        // TODO: RUN GA in A considering sigma_1 inserting and possibly deleting in [P]
-
-    }
     private void updateCurrentActionSet(double p) {
         this.updateActionSet(this.A, p);
     }
@@ -725,22 +846,18 @@ public class XCS {
         this.updateActionSet(this.A_1, p);
     }
 
-    private void updateActionSet(List<Classifier> a, double p) {
-        // TODO: UPDATE SET A using p possibly deleting in [P]
-    }
-
     private void generateActionSet(Action act) {
-        // TODO: GENERATE ACTION SET out of [M] according to act
+        //  GENERATE ACTION SET out of [M] according to act
         this.A.clear();
-        for(Classifier cl : this.M) {
-            if(cl.getAction().equals(act)) {
+        for (Classifier cl : this.M) {
+            if (cl.getAction().equals(act)) {
                 this.A.add(cl);
             }
         }
     }
 
     private Action selectActionUsing(PredictionArray PA) {
-        if(current().nextDouble() < this.p_explr) {
+        if (current().nextDouble() < this.p_explr) {
             return PA.selectRandomAction();
         } else {
             return PA.selectBestAction();
@@ -752,16 +869,16 @@ public class XCS {
     }
 
     private void generateMatchSet(Situation sigma) {
-        // TODO: [M] <- Generate Match set out of [P] using Sigma
+        // [M] <- Generate Match set out of [P] using Sigma
         this.M.clear();
-        while(this.M.isEmpty()) {
-            for(Classifier cl : this.P) {
-                if(cl.matches(sigma)) {
+        while (this.M.isEmpty()) {
+            for (Classifier cl : this.P) {
+                if (cl.matches(sigma)) {
                     this.M.add(cl);
                 }
             }
 
-            if(this.M.size() < this.theta_mna) {
+            if (this.M.size() < this.theta_mna) {
                 Classifier cl_c = this.generateCoveringClassifier(sigma);
                 this.deleteFromPopulation();
                 this.M.clear();
@@ -777,15 +894,15 @@ public class XCS {
 
     private Action selectActionFromMatchSet() {
         Set<Action> actionsInM = new HashSet<>();
-        for(Classifier cl : this.M) {
+        for (Classifier cl : this.M) {
             actionsInM.add(cl.getAction());
         }
 
         Action oneClassification = Action.getOneClassification();
         Action zeroClassification = Action.getZeroClassification();
-        if(actionsInM.contains(oneClassification) && ! actionsInM.contains(zeroClassification)) {
-           return zeroClassification;
-        } else if(actionsInM.contains(zeroClassification) && !actionsInM.contains(oneClassification)){
+        if (actionsInM.contains(oneClassification) && !actionsInM.contains(zeroClassification)) {
+            return zeroClassification;
+        } else if (actionsInM.contains(zeroClassification) && !actionsInM.contains(oneClassification)) {
             return oneClassification;
         } else {
             return Action.createRandom();
@@ -794,21 +911,21 @@ public class XCS {
 
     private void deleteFromPopulation() {
         long populationSize = this.getPopulationSize();
-        if(populationSize < this.N) {
-           return;
+        if (populationSize < this.N) {
+            return;
         }
         double averagePopulationFitness = getAveragePopulationFitness(populationSize);
         double votesum = 0.0;
-        for(Classifier cl : this.P) {
+        for (Classifier cl : this.P) {
             votesum += this.getDeletionVoteFor(cl, averagePopulationFitness);
         }
         double choicePoint = ThreadLocalRandom.current().nextDouble() * votesum;
         votesum = 0;
-        for(Classifier cl : this.P) {
+        for (Classifier cl : this.P) {
             votesum += this.getDeletionVoteFor(cl, averagePopulationFitness);
-            if(votesum > choicePoint) {
-                if(cl.getN() > 1) {
-                    cl.setN(cl.getN()-1);
+            if (votesum > choicePoint) {
+                if (cl.getN() > 1) {
+                    cl.setN(cl.getN() - 1);
                 } else {
                     this.P.remove(cl);
                 }
@@ -819,8 +936,8 @@ public class XCS {
 
     private double getDeletionVoteFor(Classifier cl, double averagePopulationFitness) {
         double vote = cl.getAs() * cl.getN();
-        if(cl.getExp() > this.theta_del && cl.getF()/ cl.getN() < this.delta * averagePopulationFitness) {
-            vote *= averagePopulationFitness / (cl.getF()/cl.getN());
+        if (cl.getExp() > this.theta_del && cl.getF() / cl.getN() < this.delta * averagePopulationFitness) {
+            vote *= averagePopulationFitness / (cl.getF() / cl.getN());
         }
         return vote;
     }
@@ -831,17 +948,180 @@ public class XCS {
 
     private double getAveragePopulationFitness(long populationSize) {
         double totalFitness = 0;
-        for(Classifier cl : this.P) {
-           totalFitness += cl.getF();
+        for (Classifier cl : this.P) {
+            totalFitness += cl.getF();
         }
-       return totalFitness / populationSize;
+        return totalFitness / populationSize;
     }
 
     private long getPopulationSize() {
         long size = 0;
-        for(Classifier cl : this.P) {
+        for (Classifier cl : this.P) {
             size += cl.getN();
         }
         return size;
+    }
+
+
+    private void updateActionSet(List<Classifier> a, double P) {
+        // TODO: UPDATE SET A using p possibly deleting in [P]
+        Double actionSetSize = a.stream().map(Classifier::getN).reduce(Double::sum).orElse(0.0);
+        for (Classifier cl : a) {
+            cl.setExp(cl.getExp() + 1);
+            if (cl.getExp() < 1 / this.beta) {
+                cl.setP(cl.getP() + (P - cl.getP()) / cl.getExp());
+            } else {
+                cl.setP(cl.getP() + this.beta * (P - cl.getP()));
+            }
+
+            if (cl.getExp() < 1 / this.beta) {
+                cl.setE(cl.getE() + (Math.abs(P - cl.getP()) - cl.getE()) / cl.getExp());
+            } else {
+                cl.setE(cl.getE() + this.beta * (Math.abs(P - cl.getP()) - cl.getE()));
+            }
+
+            if (cl.getExp() < 1 / this.beta) {
+                cl.setAs(cl.getAs() + (actionSetSize - cl.getAs()) / cl.getExp());
+            } else {
+                cl.setAs(cl.getAs() + this.beta * (actionSetSize - cl.getAs()));
+            }
+        }
+
+        this.updateFitnessActionSet(a);
+        if (this.doActionSetSubsumption) {
+            this.performActionSetSubsumption(a);
+        }
+    }
+
+    private void updateFitnessActionSet(List<Classifier> a) {
+        // UPDATE fitness in set [A]
+        double accuracySum = 0;
+        List<Double> k = new ArrayList<>();
+        for (Classifier cl : a) {
+            double value;
+            if (cl.getE() < this.epsilon_nought) {
+                value = 1.0;
+            } else {
+                value = this.alpha * Math.pow(cl.getE() / this.epsilon_nought, -1 * this.v);
+            }
+            k.add(value);
+            accuracySum += value * cl.getN();
+        }
+
+        for (int i = 0; i < a.size(); i++) {
+            Classifier cl = a.get(i);
+            cl.setF(cl.getF() + this.beta * (k.get(i) * cl.getN() / accuracySum - cl.getF()));
+        }
+
+    }
+
+    private void runGAOnActionSet(List<Classifier> a, Situation sigma) {
+        // TODO: RUN GA in A considering sigma_1 inserting and possibly deleting in [P]
+
+        Double actionSetSize = a.stream().map(Classifier::getN).reduce(Double::sum).orElse(0.0);
+        Double averageActionSetTime = a.stream()
+                .map(classifier -> classifier.getTs() * classifier.getN())
+                .reduce(Double::sum)
+                .orElse(0.0) / actionSetSize;
+        if (this.t - averageActionSetTime > this.theta_GA) {
+            for (Classifier cl : a) {
+                cl.setTs(t);
+            }
+            Classifier parent1 = this.selectOffspring(a);
+            Classifier parent2 = this.selectOffspring(a);
+
+            Classifier child1 = Classifier.copy(parent1);
+            Classifier child2 = Classifier.copy(parent2);
+
+            child1.setN(1);
+            child2.setN(1);
+
+            if (ThreadLocalRandom.current().nextDouble() < this.x) {
+                Classifier.applyCrossover(child1, child2);
+                child1.initialize(
+                        (parent1.getP() + parent2.getP()) / 2,
+                        (parent1.getE() + parent2.getE()) / 2,
+                        (parent1.getF() + parent2.getF()) / 2, t);
+                child2.initialize(
+                        (parent1.getP() + parent2.getP()) / 2,
+                        (parent1.getE() + parent2.getE()) / 2,
+                        (parent1.getF() + parent2.getF()) / 2, t);
+            }
+            child1.setF(child1.getF() * 0.1);
+            child2.setF(child2.getF() * 0.1);
+
+            for(Classifier child : Arrays.asList(child1, child2)) {
+                child.mutate(sigma, mew);
+                if(this.doGASubsumption) {
+                    if(Classifier.doesSubsume(parent1, child, this.epsilon_nought, this.theta_sub)) {
+                        parent1.setN(parent1.getN() + 1);
+                    } else if(Classifier.doesSubsume(parent2, child, this.epsilon_nought, this.theta_sub)) {
+                        parent2.setN(parent2.getN() + 1);
+                    } else {
+                        this.insertIntoPopulation(child);
+                    }
+                } else {
+                    this.insertIntoPopulation(child);
+                }
+                this.deleteFromPopulation();
+            }
+        }
+    }
+
+    private void insertIntoPopulation(Classifier child) {
+        // INSERT child into [P]
+        for(Classifier cl : this.P) {
+            if(cl.isSame(child)) {
+                cl.setN(cl.getN() + 1);
+                return;
+            }
+        }
+        this.P.add(child);
+    }
+
+    private Classifier selectOffspring(List<Classifier> a) {
+        // TODO : SELECT OFFSPRING in [A]
+        double fitnessSum = 0.0;
+        for(Classifier cl : this.A) {
+            fitnessSum += cl.getF();
+        }
+        double choicePoint = ThreadLocalRandom.current().nextDouble() * fitnessSum;
+        fitnessSum = 0.0;
+        for(Classifier cl : this.A) {
+            fitnessSum += cl.getF();
+            if(fitnessSum > choicePoint) {
+                return cl;
+            }
+        }
+        throw new RuntimeException("Reached end of select offspring method without selecting offspring");
+    }
+
+    private void performActionSetSubsumption(List<Classifier> a) {
+        // DO ACTION SET SUBSUMPTION in [A] updating [P]
+        Optional<Classifier> cl = Optional.empty();
+
+        for(Classifier c : a) {
+           if(Classifier.couldSubsume(c, this.theta_sub, this.epsilon_nought)) {
+               if (!cl.isPresent() || c.getCondition().hashCount() > cl.get().getCondition().hashCount() ||
+                       (c.getCondition().hashCount() == cl.get().getCondition().hashCount() && ThreadLocalRandom.current().nextDouble() < 0.5)
+                       ) {
+
+                   cl = Optional.of(c);
+               }
+           }
+        }
+
+        if(cl.isPresent()) {
+            Iterator<Classifier> iterator = a.iterator();
+            while(iterator.hasNext()) {
+                Classifier c = iterator.next();
+
+                if(Classifier.isMoreGeneral(cl.get(), c)) {
+                    cl.get().setN(cl.get().getN() + c.getN());
+                    iterator.remove();
+                    this.P.remove(c);
+                }
+            }
+        }
     }
 }
