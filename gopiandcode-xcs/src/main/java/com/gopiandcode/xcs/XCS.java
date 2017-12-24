@@ -1,3 +1,6 @@
+/**
+ * XCS Implementation - Based on An Algorithmic Description of XCS - Martin V. Butz and Stewart W.Wilson
+ */
 package com.gopiandcode.xcs;
 
 import java.util.*;
