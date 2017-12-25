@@ -288,6 +288,11 @@ class Environment {
     private int problemIndex = 0;
     private int stepIndex = 0;
 
+    public Environment(int problemCount) {
+        for(int i = 0; i < problemCount; i++) {
+            problems.add(new Problem(Situation.createRandom(6)));
+        }
+    }
 
     public Environment(List<Problem> problems) {
         this.problems = problems;
@@ -334,10 +339,58 @@ class Environment {
     }
 }
 
-class ReinforcementProgram {
-    public double getRewardForAction(Situation situation, Action action) {
+class SystemScorer {
+    private int correct = 0;
+    private int total = 0;
+    public void recordCorrect() {
+        correct++;
+        total++;
+    }
+    public void recordIncorrect() {
+        total++;
+    }
 
+    public double getAccuracy() {
+        if(total != 0)
+            return (double) correct/(double)total;
         return 0;
+    }
+
+    public void reset() {
+        correct = 0;
+        total = 0;
+    }
+}
+class ReinforcementProgram {
+    private SystemScorer scorer = new SystemScorer();
+    public double getRewardForAction(Situation situation, Action action) {
+        BinaryAlphabet[] situationValues = situation.getValues();
+        int index;
+        if(situationValues[0] == BinaryAlphabet.ZERO && situationValues[1] == BinaryAlphabet.ZERO) {
+            index = 0;
+        } else if(situationValues[0] == BinaryAlphabet.ZERO && situationValues[1] == BinaryAlphabet.ONE) {
+            index = 1;
+        } else if(situationValues[0] == BinaryAlphabet.ONE && situationValues[1] == BinaryAlphabet.ZERO) {
+            index = 2;
+        } else if(situationValues[0] == BinaryAlphabet.ONE && situationValues[1] == BinaryAlphabet.ONE) {
+            index = 3;
+        } else {
+            throw new RuntimeException("Invalid configuration of situation values - " + situationValues[0] + ", " + situationValues[1]);
+        }
+
+        index = index + 2;
+
+        if(situationValues[index] == action.getClassification()) {
+            scorer.recordCorrect();
+           return 1.0;
+        } else {
+            scorer.recordIncorrect();
+            return -1.0;
+        }
+    }
+
+    public SystemScorer getSystemScorer() {
+        return scorer;
     }
 }
 
@@ -640,7 +693,7 @@ public class XCS {
      * <p>
      * should be large enough that covering only occurs at the beginning of a run
      */
-    private long N;
+    private long N = 10000;
     /**
      * Learning rate for p, e, f, and as
      * <p>
@@ -749,13 +802,13 @@ public class XCS {
      * <p>
      * usefull in problems with well defined target functions - i.e multiplexer
      */
-    private boolean doGASubsumption = true;
+    private boolean doGASubsumption = false;
     /**
      * whether action sets are to be tested for subsuming
      * <p>
      * stronger than GA subsumption and condenses population more
      */
-    private boolean doActionSetSubsumption = true;
+    private boolean doActionSetSubsumption = false;
 
     /**
      * timestep
@@ -792,6 +845,10 @@ public class XCS {
     public XCS(Environment env, ReinforcementProgram rp) {
         this.env = env;
         this.rp = rp;
+    }
+
+    public void setEnv(Environment env) {
+        this.env = env;
     }
 
     public void initializeXCS() {
@@ -883,6 +940,7 @@ public class XCS {
 
             if (this.M.size() < this.theta_mna) {
                 Classifier cl_c = this.generateCoveringClassifier(sigma);
+                this.insertIntoPopulation(cl_c);
                 this.deleteFromPopulation();
                 this.M.clear();
             }
@@ -1126,5 +1184,23 @@ public class XCS {
                 }
             }
         }
+    }
+
+
+    public static void main(String[] args) {
+        ReinforcementProgram rp = new ReinforcementProgram();
+        Environment env = new Environment(10000);
+        XCS xcs = new XCS(env, rp);
+        int iterationCount = 0;
+        for(int i = 0; i < 1000000; i++) {
+            while (xcs.runSingleTrainIteration()) {
+                iterationCount++;
+            }
+            System.out.println("[" + iterationCount + "]: " + rp.getSystemScorer().getAccuracy() * 100 + "%");
+            iterationCount = 0;
+            xcs.setEnv(new Environment(10000));
+            rp.getSystemScorer().reset();
+        }
+
     }
 }
