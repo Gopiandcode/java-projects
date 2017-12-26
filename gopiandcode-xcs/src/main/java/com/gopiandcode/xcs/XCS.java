@@ -1348,22 +1348,39 @@ public class XCS {
     }
 
     public static void main(String[] args) {
+        List<Double> lastNScores = new ArrayList<>();
+        int n = 50;
+        int problemCount = 500;
         ReinforcementProgram rp = new ReinforcementProgram();
-        int problemCount = 100;
         Environment env = new Environment(problemCount);
         XCS xcs = new XCS(env, rp);
-//        xcs.initializeXCS();
-        xcs.setDoActionSetSubsumption(true);
-        xcs.setDoGASubsumption(true);
+
         int iterationCount = 0;
+
         for(int i = 0; i < 1000000; i++) {
             while (xcs.runSingleTrainIteration()) {
                 iterationCount++;
             }
-            System.out.println("[" + iterationCount + "]: " + rp.getSystemScorer().getAccuracy() * 100 + "%");
+//            System.out.println("[" + iterationCount + "]: " + rp.getSystemScorer().getAccuracy() * 100 + "%");
+            lastNScores.add(rp.getSystemScorer().getAccuracy()*100);
+            if(lastNScores.size() > n) {
+                lastNScores.remove(0);
+            }
             iterationCount = 0;
             xcs.setEnv(new Environment(problemCount));
             rp.getSystemScorer().reset();
+            if(i%Math.max(30,n) == 0 && lastNScores.size() > 0) {
+                double sx = lastNScores.stream().reduce(Double::sum).orElse(0.0);
+                double sx2 = lastNScores.stream().map(x -> x * x).reduce(Double::sum).orElse(0.0);
+
+                double xbar = sx / lastNScores.size();
+                double x2bar = sx2 / lastNScores.size();
+
+                double var = x2bar - xbar * xbar;
+                double sd = Math.sqrt(var);
+
+                System.out.println("[" + iterationCount + "]: Average of last " + n + ": " + xbar + ", sd: " + sd);
+            }
         }
 
     }
