@@ -1349,7 +1349,8 @@ public class XCS {
 
     public static void main(String[] args) {
         ReinforcementProgram rp = new ReinforcementProgram();
-        Environment env = new Environment(100000);
+        int problemCount = 100;
+        Environment env = new Environment(problemCount);
         XCS xcs = new XCS(env, rp);
 //        xcs.initializeXCS();
         xcs.setDoActionSetSubsumption(true);
@@ -1361,7 +1362,7 @@ public class XCS {
             }
             System.out.println("[" + iterationCount + "]: " + rp.getSystemScorer().getAccuracy() * 100 + "%");
             iterationCount = 0;
-            xcs.setEnv(new Environment(10000));
+            xcs.setEnv(new Environment(problemCount));
             rp.getSystemScorer().reset();
         }
 
