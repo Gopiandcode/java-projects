@@ -10,11 +10,32 @@ import java.util.stream.Collectors;
 import static java.util.concurrent.ThreadLocalRandom.current;
 
 enum BinaryAlphabet {
-    ONE, ZERO
+    ONE, ZERO;
+    public String toString() {
+        switch(this) {
+            case ONE:
+                return "1";
+            case ZERO:
+                return "0";
+        }
+        return null;
+    }
 }
 
 enum TernaryAlphabet {
-    ONE, ZERO, HASH
+    ONE, ZERO, HASH;
+
+    public String toString() {
+      switch(this) {
+          case ONE:
+              return "1";
+          case ZERO:
+              return "0";
+          case HASH:
+              return "#";
+      }
+      return null;
+    }
 }
 
 class Action {
@@ -80,8 +101,12 @@ class Condition {
 
     @Override
     public String toString() {
+        StringBuilder sb = new StringBuilder();
+        for (TernaryAlphabet value : values) {
+           sb.append(value.toString());
+        }
         return "Condition(" +
-                 Arrays.toString(values) +
+                sb.toString() +
                 ')';
     }
 
@@ -277,8 +302,13 @@ class Situation {
 
     @Override
     public String toString() {
+        StringBuilder sb = new StringBuilder();
+        for (BinaryAlphabet situationValue : values) {
+            sb.append(situationValue.toString());
+        }
+
         return "Situation(" +
-                 Arrays.toString(values) +
+                  sb.toString() +
                 ')';
     }
 }
@@ -400,16 +430,16 @@ class SystemScorer {
 }
 class ReinforcementProgram {
     private SystemScorer scorer = new SystemScorer();
-    private int positiveReward;
+    private double positiveReward;
     private double incorrectPunishment;
 
-    ReinforcementProgram(int positiveReward, double incorrectPunishment) {
+    ReinforcementProgram(double positiveReward, double incorrectPunishment) {
         this.positiveReward = positiveReward;
         this.incorrectPunishment = incorrectPunishment;
     }
 
     public double getRewardForAction(Situation situation, Action action) {
-        BinaryAlphabet[] situationValues = situation.getValues();
+       BinaryAlphabet[] situationValues = situation.getValues();
         int index;
         if(situationValues[0] == BinaryAlphabet.ZERO && situationValues[1] == BinaryAlphabet.ZERO) {
             index = 0;
@@ -423,8 +453,8 @@ class ReinforcementProgram {
             throw new RuntimeException("Invalid configuration of situation values - " + situationValues[0] + ", " + situationValues[1]);
         }
 
-        index = index + 2;
-
+       index = index + 2;
+        System.out.println("RP[" + situation + "->" + situationValues[index] + "] ? " + action + "  =============== " + (action.getClassification() == situationValues[index]));
         if(situationValues[index] == action.getClassification()) {
             scorer.recordCorrect();
             return positiveReward;
@@ -774,7 +804,7 @@ public class XCS {
      * Parameter used in calculating the fitness of a classifier
      * should be 1% of the maximum value of p
      */
-    private double epsilon_nought = 10; // assuming maximum is 1000
+    private double epsilon_nought = 0.01; // assuming maximum is 1
     /**
      * Parameter used in calculating the fitness of a classifier
      * <p>
@@ -1003,7 +1033,7 @@ public class XCS {
                 }
             }
 
-            if (this.M.size() < this.theta_mna) {
+            if (this.M.stream().map(Classifier::getN).reduce(Double::sum).orElse(0.0) < this.theta_mna) {
                 Classifier cl_c = this.generateCoveringClassifier(sigma);
                 this.insertIntoPopulation(cl_c);
                 this.deleteFromPopulation();
@@ -1421,12 +1451,14 @@ public class XCS {
 
     public static void main(String[] args) {
         List<Double> lastNScores = new ArrayList<>();
-        int n = 50;
+        int n = 200;
         int problemCount = 500;
-        ReinforcementProgram rp = new ReinforcementProgram(100, 0.0);
+        ReinforcementProgram rp = new ReinforcementProgram(1.0, 0.0);
         Environment env = new Environment(problemCount);
         XCS xcs = new XCS(env, rp);
-        xcs.setDoGASubsumption(false);
+        xcs.setN(300);
+        xcs.setDoGASubsumption(true);
+        xcs.setTheta_mna(20);
         xcs.setDoActionSetSubsumption(false);
 
         int iterationCount = 0;
@@ -1454,6 +1486,7 @@ public class XCS {
                 double sd = Math.sqrt(var);
 
                 System.out.println("[" + iterationCount + "]: Average of last " + n + ": " + xbar + ", sd: " + sd);
+                lastNScores.clear();
             }
         }
 
