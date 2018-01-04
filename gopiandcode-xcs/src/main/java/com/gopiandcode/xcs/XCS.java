@@ -163,7 +163,7 @@ class Condition {
         TernaryAlphabet[] ternaryAlphabets = new TernaryAlphabet[size];
         for (int i = 0; i < size; i++) {
 
-            TernaryAlphabet value = TernaryAlphabet.ONE;
+            TernaryAlphabet value;
             switch (current().nextInt(0, 3)) {
                 case 0:
                     value = TernaryAlphabet.ZERO;
@@ -454,7 +454,7 @@ class ReinforcementProgram {
         }
 
        index = index + 2;
-        System.out.println("RP[" + situation + "->" + situationValues[index] + "] ? " + action + "  =============== " + (action.getClassification() == situationValues[index]));
+//        System.out.println("RP[" + situation + "->" + situationValues[index] + "] ? " + action + "  =============== " + (action.getClassification() == situationValues[index]));
         if(situationValues[index] == action.getClassification()) {
             scorer.recordCorrect();
             return positiveReward;
@@ -693,7 +693,7 @@ class Classifier {
     }
 
     public boolean isSame(Classifier cl) {
-        return cl.condition.equals(condition) && cl.action.equals(cl.action);
+        return cl.condition.equals(condition) && cl.action.equals(action);
     }
     public static boolean couldSubsume(Classifier cl, double theta_sub, double epsilon_nought) {
         if(cl.getExp() > theta_sub) {
@@ -1275,18 +1275,18 @@ public class XCS {
            }
         }
 
-        if(cl.isPresent()) {
+        cl.ifPresent(classifier -> {
             Iterator<Classifier> iterator = a.iterator();
-            while(iterator.hasNext()) {
+            while (iterator.hasNext()) {
                 Classifier c = iterator.next();
 
-                if(Classifier.isMoreGeneral(cl.get(), c)) {
-                    cl.get().setN(cl.get().getN() + c.getN());
+                if (Classifier.isMoreGeneral(classifier, c)) {
+                    classifier.setN(classifier.getN() + c.getN());
                     iterator.remove();
                     this.P.remove(c);
                 }
             }
-        }
+        });
     }
 
     public long getN() {
