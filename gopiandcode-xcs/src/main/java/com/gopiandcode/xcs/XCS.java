@@ -36,6 +36,13 @@ class Action {
         return new Action(BinaryAlphabet.ZERO);
     }
 
+    @Override
+    public String toString() {
+        return "Action(" +
+                 classification +
+                ')';
+    }
+
     public static Action createRandom() {
         if (current().nextInt(0, 1) == 0) {
             return getZeroClassification();
@@ -69,6 +76,13 @@ class Condition {
 
     public TernaryAlphabet[] getValues() {
         return values;
+    }
+
+    @Override
+    public String toString() {
+        return "Condition(" +
+                 Arrays.toString(values) +
+                ')';
     }
 
     Condition(TernaryAlphabet[] values) {
@@ -260,6 +274,13 @@ class Situation {
         }
         return new Situation(binaryAlphabets);
     }
+
+    @Override
+    public String toString() {
+        return "Situation(" +
+                 Arrays.toString(values) +
+                ')';
+    }
 }
 
 class Problem {
@@ -281,12 +302,28 @@ class Problem {
     public int getSteps() {
         return this.steps.size();
     }
+
+    @Override
+    public String toString() {
+        return "Problem(" +
+                steps +
+                ')';
+    }
 }
 
 class Environment {
     private List<Problem> problems = new ArrayList<>();
     private int problemIndex = 0;
     private int stepIndex = 0;
+
+    @Override
+    public String toString() {
+        return "Environment{" +
+                "problems=" + problems +
+                ", problemIndex=" + problemIndex +
+                ", stepIndex=" + stepIndex +
+                '}';
+    }
 
     public Environment(int problemCount) {
         for(int i = 0; i < problemCount; i++) {
@@ -363,6 +400,14 @@ class SystemScorer {
 }
 class ReinforcementProgram {
     private SystemScorer scorer = new SystemScorer();
+    private int positiveReward;
+    private double incorrectPunishment;
+
+    ReinforcementProgram(int positiveReward, double incorrectPunishment) {
+        this.positiveReward = positiveReward;
+        this.incorrectPunishment = incorrectPunishment;
+    }
+
     public double getRewardForAction(Situation situation, Action action) {
         BinaryAlphabet[] situationValues = situation.getValues();
         int index;
@@ -382,10 +427,10 @@ class ReinforcementProgram {
 
         if(situationValues[index] == action.getClassification()) {
             scorer.recordCorrect();
-           return 1000;
+            return positiveReward;
         } else {
             scorer.recordIncorrect();
-            return 0.0;
+            return incorrectPunishment;
         }
     }
 
@@ -395,6 +440,15 @@ class ReinforcementProgram {
 }
 
 class Classifier {
+
+    @Override
+    public String toString() {
+        return "Classifier(" +
+                 condition +
+                " -> " + action +
+                ")(" + n + ")";
+    }
+
     private Condition condition;
     private Action action;
     /**
@@ -597,9 +651,11 @@ class Classifier {
                            condition.getValues()[i] = TernaryAlphabet.ONE;
                            break;
                        case ZERO:
-                           condition.getValues()[i] = TernaryAlphabet.ONE;
+                           condition.getValues()[i] = TernaryAlphabet.ZERO;
                            break;
                    }
+               } else {
+                   condition.getValues()[i] = TernaryAlphabet.HASH;
                }
             }
             i++;
@@ -643,6 +699,13 @@ class Classifier {
 }
 
 class PredictionArray {
+    @Override
+    public String toString() {
+        return "PredictionArray{" +
+     predictionArray +
+                '}';
+    }
+
     private final Map<Action, Double> predictionArray;
 
     PredictionArray(Map<Action, Double> predictionArray) {
@@ -663,7 +726,8 @@ class PredictionArray {
         }
 
         for (Action a : fsa.keySet()) {
-            pa.put(a, pa.get(a) / fsa.get(a));
+            if(fsa.get(a) != 0)
+                pa.put(a, pa.get(a) / fsa.get(a));
         }
         return new PredictionArray(pa);
     }
@@ -683,7 +747,7 @@ class PredictionArray {
                 bestSeen = Optional.of(actionDoubleEntry.getKey());
             }
         }
-        return bestSeen.get();
+        return bestSeen.orElse(Action.createRandom());
     }
 }
 
@@ -973,7 +1037,7 @@ public class XCS {
 
     private void deleteFromPopulation() {
         long populationSize = this.getPopulationSize();
-        if (populationSize < this.N) {
+        if (populationSize <= this.N) {
             return;
         }
         double averagePopulationFitness = getAveragePopulationFitness(populationSize);
@@ -1031,21 +1095,29 @@ public class XCS {
         for (Classifier cl : a) {
             cl.setExp(cl.getExp() + 1);
             if (cl.getExp() < 1 / this.beta) {
+                // if cl.exp < 1/beta
                 cl.setP(cl.getP() + (P - cl.getP()) / cl.getExp());
+                // cp.p <- cp.p + (P - cl.p) / cl.exp
             } else {
                 cl.setP(cl.getP() + this.beta * (P - cl.getP()));
+                //cl.p <- cl.p + beta * (P - cl.p)
             }
 
             if (cl.getExp() < 1 / this.beta) {
+                // if cl.exp < 1/beta
                 cl.setE(cl.getE() + (Math.abs(P - cl.getP()) - cl.getE()) / cl.getExp());
+                // cl.e <- cl.e + (|P - cl.p| - cl.e)/cl.exp
             } else {
                 cl.setE(cl.getE() + this.beta * (Math.abs(P - cl.getP()) - cl.getE()));
+                // cl.e <- cl.e + this.beta * (|P - cl.p| - cl.e)
             }
 
             if (cl.getExp() < 1 / this.beta) {
                 cl.setAs(cl.getAs() + (actionSetSize - cl.getAs()) / cl.getExp());
+                // cl.as <- cl.as + (sum c.n for c in [A] - cl.as)/cl.exp
             } else {
                 cl.setAs(cl.getAs() + this.beta * (actionSetSize - cl.getAs()));
+                // cl.as <- cl.as + beta * (sum c.n for c in [a] - cl.as)
             }
         }
 
@@ -1144,12 +1216,12 @@ public class XCS {
     private Classifier selectOffspring(List<Classifier> a) {
         // TODO : SELECT OFFSPRING in [A]
         double fitnessSum = 0.0;
-        for(Classifier cl : this.A) {
+        for(Classifier cl : a) {
             fitnessSum += cl.getF();
         }
         double choicePoint = ThreadLocalRandom.current().nextDouble() * fitnessSum;
         fitnessSum = 0.0;
-        for(Classifier cl : this.A) {
+        for(Classifier cl : a) {
             fitnessSum += cl.getF();
             if(fitnessSum > choicePoint) {
                 return cl;
@@ -1351,9 +1423,11 @@ public class XCS {
         List<Double> lastNScores = new ArrayList<>();
         int n = 50;
         int problemCount = 500;
-        ReinforcementProgram rp = new ReinforcementProgram();
+        ReinforcementProgram rp = new ReinforcementProgram(100, 0.0);
         Environment env = new Environment(problemCount);
         XCS xcs = new XCS(env, rp);
+        xcs.setDoGASubsumption(false);
+        xcs.setDoActionSetSubsumption(false);
 
         int iterationCount = 0;
 
