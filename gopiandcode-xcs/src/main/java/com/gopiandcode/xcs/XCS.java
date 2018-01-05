@@ -3,6 +3,9 @@
  */
 package com.gopiandcode.xcs;
 
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
+
 import java.util.*;
 import java.util.concurrent.ThreadLocalRandom;
 import java.util.stream.Collectors;
@@ -20,6 +23,7 @@ enum BinaryAlphabet {
         }
         return null;
     }
+
 }
 
 enum TernaryAlphabet {
@@ -57,6 +61,7 @@ class Action {
         return new Action(BinaryAlphabet.ZERO);
     }
 
+    @NotNull
     @Override
     public String toString() {
         return "Action(" +
@@ -64,6 +69,7 @@ class Action {
                 ')';
     }
 
+    @NotNull
     public static Action createRandom() {
         if (current().nextInt(0, 1) == 0) {
             return getZeroClassification();
@@ -73,7 +79,7 @@ class Action {
     }
 
     @Override
-    public boolean equals(Object o) {
+    public boolean equals(@Nullable Object o) {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
 
@@ -87,7 +93,8 @@ class Action {
         return classification.hashCode();
     }
 
-    public static Action copy(Action action) {
+
+    public static Action copy(@NotNull Action action) {
         return new Action(action.classification);
     }
 }
@@ -99,6 +106,7 @@ class Condition {
         return values;
     }
 
+    @NotNull
     @Override
     public String toString() {
         StringBuilder sb = new StringBuilder();
@@ -114,7 +122,7 @@ class Condition {
         this.values = values;
     }
 
-    Condition(String representation) {
+    Condition(@NotNull String representation) {
         values = new TernaryAlphabet[representation.length()];
         for (int i = 0; i < representation.length(); i++) {
             switch (representation.charAt(i)) {
@@ -133,7 +141,7 @@ class Condition {
         }
     }
 
-    public boolean matches(Situation situation) {
+    public boolean matches(@NotNull Situation situation) {
         BinaryAlphabet[] situationValues = situation.getValues();
         if (situationValues.length != this.values.length) {
             throw new RuntimeException("Situation does not match the size of the Condition");
@@ -204,7 +212,7 @@ class Condition {
         return new Condition(ternaryAlphabets);
     }
 
-    public static Condition createCovering(Situation sigma, double p_hash) {
+    public static Condition createCovering(@NotNull Situation sigma, double p_hash) {
         BinaryAlphabet[] sigmaValues = sigma.getValues();
         TernaryAlphabet[] values = new TernaryAlphabet[sigmaValues.length];
 
@@ -227,12 +235,12 @@ class Condition {
         return new Condition(values);
     }
 
-    public static Condition copy(Condition condition) {
+    public static Condition copy(@NotNull Condition condition) {
        return new Condition(Arrays.copyOf(condition.getValues(), condition.getValues().length));
     }
 
     @Override
-    public boolean equals(Object o) {
+    public boolean equals(@Nullable Object o) {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
 
@@ -252,6 +260,10 @@ class Condition {
     public int hashCode() {
         return Arrays.hashCode(values);
     }
+
+    public void setValues(int i, TernaryAlphabet value) {
+       values[i] = value;
+    }
 }
 
 class Situation {
@@ -265,7 +277,7 @@ class Situation {
         this.values = values;
     }
 
-    Situation(String representation) {
+    Situation(@NotNull String representation) {
         values = new BinaryAlphabet[representation.length()];
         for (int i = 0; i < representation.length(); i++) {
             switch (representation.charAt(i)) {
@@ -300,6 +312,7 @@ class Situation {
         return new Situation(binaryAlphabets);
     }
 
+    @NotNull
     @Override
     public String toString() {
         StringBuilder sb = new StringBuilder();
@@ -310,6 +323,22 @@ class Situation {
         return "Situation(" +
                   sb.toString() +
                 ')';
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+
+        Situation situation = (Situation) o;
+
+        // Probably incorrect - comparing Object[] arrays with Arrays.equals
+        return Arrays.equals(values, situation.values);
+    }
+
+    @Override
+    public int hashCode() {
+        return Arrays.hashCode(values);
     }
 }
 
@@ -333,11 +362,27 @@ class Problem {
         return this.steps.size();
     }
 
+    @NotNull
     @Override
     public String toString() {
         return "Problem(" +
                 steps +
                 ')';
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+
+        Problem problem = (Problem) o;
+
+        return steps != null ? steps.equals(problem.steps) : problem.steps == null;
+    }
+
+    @Override
+    public int hashCode() {
+        return steps != null ? steps.hashCode() : 0;
     }
 }
 
@@ -346,6 +391,7 @@ class Environment {
     private int problemIndex = 0;
     private int stepIndex = 0;
 
+    @NotNull
     @Override
     public String toString() {
         return "Environment{" +
@@ -365,7 +411,7 @@ class Environment {
         this.problems = problems;
     }
 
-    public Environment(String... problems) {
+    public Environment(@NotNull String... problems) {
         this.problems = Arrays.stream(problems).map(s -> new Problem(new Situation(s))).collect(Collectors.toList());
     }
 
@@ -429,6 +475,7 @@ class SystemScorer {
     }
 }
 class ReinforcementProgram {
+    @NotNull
     private SystemScorer scorer = new SystemScorer();
     private double positiveReward;
     private double incorrectPunishment;
@@ -438,8 +485,18 @@ class ReinforcementProgram {
         this.incorrectPunishment = incorrectPunishment;
     }
 
-    public double getRewardForAction(Situation situation, Action action) {
-       BinaryAlphabet[] situationValues = situation.getValues();
+    public double getRewardForAction(@NotNull Situation situation, @NotNull Action action) {
+        if(isCorrect(situation, action)) {
+            scorer.recordCorrect();
+            return positiveReward;
+        } else {
+            scorer.recordIncorrect();
+            return incorrectPunishment;
+        }
+    }
+
+    public static boolean isCorrect(@NotNull Situation situation, @NotNull Action action) {
+        BinaryAlphabet[] situationValues = situation.getValues();
         int index;
         if(situationValues[0] == BinaryAlphabet.ZERO && situationValues[1] == BinaryAlphabet.ZERO) {
             index = 0;
@@ -453,17 +510,12 @@ class ReinforcementProgram {
             throw new RuntimeException("Invalid configuration of situation values - " + situationValues[0] + ", " + situationValues[1]);
         }
 
-       index = index + 2;
+        index = index + 2;
 //        System.out.println("RP[" + situation + "->" + situationValues[index] + "] ? " + action + "  =============== " + (action.getClassification() == situationValues[index]));
-        if(situationValues[index] == action.getClassification()) {
-            scorer.recordCorrect();
-            return positiveReward;
-        } else {
-            scorer.recordIncorrect();
-            return incorrectPunishment;
-        }
+        return situationValues[index] == action.getClassification();
     }
 
+    @NotNull
     public SystemScorer getSystemScorer() {
         return scorer;
     }
@@ -471,6 +523,30 @@ class ReinforcementProgram {
 
 class Classifier {
 
+    public static Situation GenerateMatching(Classifier cl) {
+        TernaryAlphabet[] values = cl.condition.getValues();
+        BinaryAlphabet[] result = new BinaryAlphabet[values.length];
+        for (int i = 0; i < values.length; i++) {
+           switch(values[i]) {
+               case ONE:
+                   result[i] =  BinaryAlphabet.ONE;
+                   break;
+               case ZERO:
+                   result[i] =  BinaryAlphabet.ZERO;
+                   break;
+               case HASH:
+                   if(ThreadLocalRandom.current().nextDouble() > 0.5) {
+                       result[i] =  BinaryAlphabet.ZERO;
+                   } else {
+                       result[i] =  BinaryAlphabet.ONE;
+                   }
+                   break;
+           }
+        }
+
+        return new Situation(result);
+    }
+    @NotNull
     @Override
     public String toString() {
         return "Classifier(" +
@@ -614,12 +690,12 @@ class Classifier {
         this.f = f;
     }
 
-    public boolean matches(Situation sigma) {
+    public boolean matches(@NotNull Situation sigma) {
         checkInitialization();
         return this.condition.matches(sigma);
     }
 
-    public static Classifier coverSituation(Situation sigma, Action action, double P_hash) {
+    public static Classifier coverSituation(@NotNull Situation sigma, Action action, double P_hash) {
         return new Classifier(Condition.createCovering(sigma, P_hash), action);
     }
 
@@ -634,7 +710,8 @@ class Classifier {
         this.initialized = true;
     }
 
-    public static Classifier copy(Classifier original) {
+    @NotNull
+    public static Classifier copy(@NotNull Classifier original) {
        Classifier copy = new Classifier(Condition.copy(original.getCondition()), Action.copy(original.getAction()));
        copy.initialize(
                original.getP(),
@@ -648,7 +725,7 @@ class Classifier {
        return copy;
     }
 
-    public static void applyCrossover(Classifier child1, Classifier child2) {
+    public static void applyCrossover(@NotNull Classifier child1, @NotNull Classifier child2) {
         double x = ThreadLocalRandom.current().nextDouble() * (child1.getCondition().getValues().length + 1);
         double y = ThreadLocalRandom.current().nextDouble() * (child1.getCondition().getValues().length + 1);
         if(x > y) {
@@ -669,33 +746,34 @@ class Classifier {
 
         child1.initialized = false;
         child2.initialized = false;
+
     }
 
-    public void mutate(Situation sigma, double mew) {
+    public void mutate(@NotNull Situation sigma, double mew) {
         int i = 0;
         do {
             if(ThreadLocalRandom.current().nextDouble() < mew) {
                if(condition.getValues()[i] == TernaryAlphabet.HASH) {
                    switch(sigma.getValues()[i]) {
                        case ONE:
-                           condition.getValues()[i] = TernaryAlphabet.ONE;
+                           condition.setValues(i, TernaryAlphabet.ONE);
                            break;
                        case ZERO:
-                           condition.getValues()[i] = TernaryAlphabet.ZERO;
+                           condition.setValues(i, TernaryAlphabet.ZERO);
                            break;
                    }
                } else {
-                   condition.getValues()[i] = TernaryAlphabet.HASH;
+                   condition.setValues(i, TernaryAlphabet.HASH);
                }
             }
             i++;
         } while(i < condition.getValues().length);
     }
 
-    public boolean isSame(Classifier cl) {
+    public boolean isSame(@NotNull Classifier cl) {
         return cl.condition.equals(condition) && cl.action.equals(action);
     }
-    public static boolean couldSubsume(Classifier cl, double theta_sub, double epsilon_nought) {
+    public static boolean couldSubsume(@NotNull Classifier cl, double theta_sub, double epsilon_nought) {
         if(cl.getExp() > theta_sub) {
             if(cl.getE() < epsilon_nought) {
                 return true;
@@ -704,7 +782,7 @@ class Classifier {
         return false;
     }
 
-    public static boolean isMoreGeneral(Classifier general, Classifier specific) {
+    public static boolean isMoreGeneral(@NotNull Classifier general, @NotNull Classifier specific) {
         if(general.getCondition().hashCount() <= specific.getCondition().hashCount()) return false;
         int i = 0;
         TernaryAlphabet[] generalValues = general.getCondition().getValues();
@@ -719,16 +797,59 @@ class Classifier {
         return true;
     }
 
-    public static boolean doesSubsume(Classifier sub, Classifier tos,  double theta_sub, double epsilon_nought) {
+    public static boolean doesSubsume(@NotNull Classifier sub, @NotNull Classifier tos, double theta_sub, double epsilon_nought) {
         if(sub.getAction() == tos.getAction())
             if(Classifier.couldSubsume(sub, theta_sub, epsilon_nought))
                 if(Classifier.isMoreGeneral(sub, tos))
                     return true;
         return false;
     }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+
+        Classifier that = (Classifier) o;
+
+        if (Double.compare(that.p, p) != 0) return false;
+        if (Double.compare(that.e, e) != 0) return false;
+        if (Double.compare(that.f, f) != 0) return false;
+        if (Double.compare(that.exp, exp) != 0) return false;
+        if (ts != that.ts) return false;
+        if (Double.compare(that.as, as) != 0) return false;
+        if (Double.compare(that.n, n) != 0) return false;
+        if (initialized != that.initialized) return false;
+        if (condition != null ? !condition.equals(that.condition) : that.condition != null) return false;
+        return action != null ? action.equals(that.action) : that.action == null;
+    }
+
+    @Override
+    public int hashCode() {
+        int result;
+        long temp;
+        result = condition != null ? condition.hashCode() : 0;
+        result = 31 * result + (action != null ? action.hashCode() : 0);
+        temp = Double.doubleToLongBits(p);
+        result = 31 * result + (int) (temp ^ (temp >>> 32));
+        temp = Double.doubleToLongBits(e);
+        result = 31 * result + (int) (temp ^ (temp >>> 32));
+        temp = Double.doubleToLongBits(f);
+        result = 31 * result + (int) (temp ^ (temp >>> 32));
+        temp = Double.doubleToLongBits(exp);
+        result = 31 * result + (int) (temp ^ (temp >>> 32));
+        result = 31 * result + (int) (ts ^ (ts >>> 32));
+        temp = Double.doubleToLongBits(as);
+        result = 31 * result + (int) (temp ^ (temp >>> 32));
+        temp = Double.doubleToLongBits(n);
+        result = 31 * result + (int) (temp ^ (temp >>> 32));
+        result = 31 * result + (initialized ? 1 : 0);
+        return result;
+    }
 }
 
 class PredictionArray {
+    @NotNull
     @Override
     public String toString() {
         return "PredictionArray{" +
@@ -747,15 +868,26 @@ class PredictionArray {
         return predictionArray.values().stream().max(Double::compare).orElse(0.0);
     }
 
-    public static PredictionArray generatePredictionArray(List<Classifier> M) {
+    public static PredictionArray generatePredictionArray(@NotNull List<Classifier> M) {
         Map<Action, Double> pa = new LinkedHashMap<>();
         Map<Action, Double> fsa = new HashMap<>();
         for (Classifier cl : M) {
-            pa.put(cl.getAction(), pa.getOrDefault(cl.getAction(), 0.0) + cl.getP() * cl.getF());
-            fsa.put(cl.getAction(), fsa.getOrDefault(cl.getAction(), 0.0) + cl.getF());
+            //  pa[cl.a] <- pa[cl.a] + cl.p * cl.f
+            pa.put(cl.getAction(),
+                    // pa[cl.a]
+                    pa.getOrDefault(cl.getAction(), 0.0) +
+                            // cl.p * cl.f
+                            cl.getP() * cl.getF());
+            // fsa[cl.a] = fsa[cl.a] + cl.f
+            fsa.put(cl.getAction(),
+                    // fsa[cl.a]
+                    fsa.getOrDefault(cl.getAction(), 0.0) +
+                            // cl.f
+                            cl.getF());
         }
 
         for (Action a : fsa.keySet()) {
+            // if fsa[a] != 0.0, pa[a] <- pa[a] / fsa[a]
             if(fsa.get(a) != 0)
                 pa.put(a, pa.get(a) / fsa.get(a));
         }
@@ -804,7 +936,7 @@ public class XCS {
      * Parameter used in calculating the fitness of a classifier
      * should be 1% of the maximum value of p
      */
-    private double epsilon_nought = 0.01; // assuming maximum is 1
+    private double epsilon_nought = 1; // assuming maximum is 100
     /**
      * Parameter used in calculating the fitness of a classifier
      * <p>
@@ -883,7 +1015,7 @@ public class XCS {
      * <p>
      * could be 0.5 - depends on type of experiment
      */
-    private double p_explr = 0.5;
+    private double p_explr = 0.01;
     /**
      * minimal number of actions required for no covering to happen
      * <p>
@@ -918,18 +1050,22 @@ public class XCS {
     /**
      * population - all classifiers that exist at time t
      */
+    @NotNull
     private List<Classifier> P = new ArrayList<>();
     /**
      * match set formed from P - includes all classifiers that match the current situation
      */
+    @NotNull
     private List<Classifier> M = new ArrayList<>();
     /**
      * action set formed from M - includes all classifiers of M which propose executed action
      */
+    @NotNull
     private List<Classifier> A = new ArrayList<>();
     /**
      * previous action set
      */
+    @NotNull
     private List<Classifier> A_1 = new ArrayList<>();
 
     private Environment env;
@@ -967,6 +1103,7 @@ public class XCS {
         this.generateActionSet(act);
         double p = rp.getRewardForAction(sigma, act);
         if (this.A_1.size() > 0) {
+            assert false;
             double Ptemp = this.p_1 + this.gamma * PA.findMax();
             this.updateLastActionSet(Ptemp);
             this.runGAOnLastActionSet(this.sigma_1);
@@ -977,6 +1114,7 @@ public class XCS {
             this.runGAOnCurrentActionSet(sigma);
             this.A_1.clear();
         } else {
+            assert false;
             this.A_1.addAll(this.A);
             this.p_1 = p;
             this.sigma_1 = sigma;
@@ -985,11 +1123,11 @@ public class XCS {
         return true;
     }
 
-    private void runGAOnLastActionSet(Situation sigma_1) {
+    private void runGAOnLastActionSet(@NotNull Situation sigma_1) {
         this.runGAOnActionSet(this.A_1, sigma_1);
     }
 
-    private void runGAOnCurrentActionSet(Situation sigma) {
+    private void runGAOnCurrentActionSet(@NotNull Situation sigma) {
         this.runGAOnActionSet(this.A, sigma);
     }
 
@@ -1011,7 +1149,7 @@ public class XCS {
         }
     }
 
-    private Action selectActionUsing(PredictionArray PA) {
+    private Action selectActionUsing(@NotNull PredictionArray PA) {
         if (current().nextDouble() < this.p_explr) {
             return PA.selectRandomAction();
         } else {
@@ -1023,7 +1161,7 @@ public class XCS {
         return PredictionArray.generatePredictionArray(this.M);
     }
 
-    private void generateMatchSet(Situation sigma) {
+    private void generateMatchSet(@NotNull Situation sigma) {
         // [M] <- Generate Match set out of [P] using Sigma
         this.M.clear();
         while (this.M.isEmpty()) {
@@ -1033,7 +1171,11 @@ public class XCS {
                 }
             }
 
-            if (this.M.stream().map(Classifier::getN).reduce(Double::sum).orElse(0.0) < this.theta_mna) {
+            Set<BinaryAlphabet> actions = new HashSet<>();
+            for (Classifier classifier : this.M) {
+               actions.add(classifier.getAction().getClassification());
+            }
+            if (actions.size() < this.theta_mna) {
                 Classifier cl_c = this.generateCoveringClassifier(sigma);
                 this.insertIntoPopulation(cl_c);
                 this.deleteFromPopulation();
@@ -1042,12 +1184,15 @@ public class XCS {
         }
     }
 
-    private Classifier generateCoveringClassifier(Situation sigma) {
+    @NotNull
+    private Classifier generateCoveringClassifier(@NotNull Situation sigma) {
         Classifier classifer = Classifier.coverSituation(sigma, this.selectActionFromMatchSet(), this.P_sharp);
+        assert classifer.matches(sigma);
         classifer.initialize(this.p_I, this.e_I, this.F_I, this.t);
         return classifer;
     }
 
+    @NotNull
     private Action selectActionFromMatchSet() {
         Set<Action> actionsInM = new HashSet<>();
         for (Classifier cl : this.M) {
@@ -1073,7 +1218,8 @@ public class XCS {
         double averagePopulationFitness = getAveragePopulationFitness(populationSize);
         double votesum = 0.0;
         for (Classifier cl : this.P) {
-            votesum += this.getDeletionVoteFor(cl, averagePopulationFitness);
+            double deletionVoteFor = this.getDeletionVoteFor(cl, averagePopulationFitness);
+            votesum += deletionVoteFor;
         }
         double choicePoint = ThreadLocalRandom.current().nextDouble() * votesum;
         votesum = 0;
@@ -1090,7 +1236,7 @@ public class XCS {
         }
     }
 
-    private double getDeletionVoteFor(Classifier cl, double averagePopulationFitness) {
+    private double getDeletionVoteFor(@NotNull Classifier cl, double averagePopulationFitness) {
         double vote = cl.getAs() * cl.getN();
         if (cl.getExp() > this.theta_del && cl.getF() / cl.getN() < this.delta * averagePopulationFitness) {
             vote *= averagePopulationFitness / (cl.getF() / cl.getN());
@@ -1119,11 +1265,15 @@ public class XCS {
     }
 
 
-    private void updateActionSet(List<Classifier> a, double P) {
+    private void updateActionSet(@NotNull List<Classifier> a, double P) {
         // TODO: UPDATE SET A using p possibly deleting in [P]
         Double actionSetSize = a.stream().map(Classifier::getN).reduce(Double::sum).orElse(0.0);
         for (Classifier cl : a) {
+            // for each classifer cl in [a]
+
             cl.setExp(cl.getExp() + 1);
+            // cl.exp++
+
             if (cl.getExp() < 1 / this.beta) {
                 // if cl.exp < 1/beta
                 cl.setP(cl.getP() + (P - cl.getP()) / cl.getExp());
@@ -1157,7 +1307,7 @@ public class XCS {
         }
     }
 
-    private void updateFitnessActionSet(List<Classifier> a) {
+    private void updateFitnessActionSet(@NotNull List<Classifier> a) {
         // UPDATE fitness in set [A]
         double accuracySum = 0;
         List<Double> k = new ArrayList<>();
@@ -1178,8 +1328,11 @@ public class XCS {
         }
 
     }
+public List<Classifier> getTopN(long n){
 
-    private void runGAOnActionSet(List<Classifier> a, Situation sigma) {
+       return this.P.stream().sorted((o1, o2) -> -1 * Double.compare(o1.getF(), o2.getF())).limit(n).collect(Collectors.toList());
+}
+    private void runGAOnActionSet(@NotNull List<Classifier> a, @NotNull Situation sigma) {
         // TODO: RUN GA in A considering sigma_1 inserting and possibly deleting in [P]
 
         Double actionSetSize = a.stream().map(Classifier::getN).reduce(Double::sum).orElse(0.0);
@@ -1217,6 +1370,7 @@ public class XCS {
             for(Classifier child : Arrays.asList(child1, child2)) {
                 child.mutate(sigma, mew);
                 if(this.doGASubsumption) {
+                    assert false;
                     if(Classifier.doesSubsume(parent1, child, this.epsilon_nought, this.theta_sub)) {
                         parent1.setN(parent1.getN() + 1);
                     } else if(Classifier.doesSubsume(parent2, child, this.epsilon_nought, this.theta_sub)) {
@@ -1232,7 +1386,7 @@ public class XCS {
         }
     }
 
-    private void insertIntoPopulation(Classifier child) {
+    private void insertIntoPopulation(@NotNull Classifier child) {
         // INSERT child into [P]
         for(Classifier cl : this.P) {
             if(cl.isSame(child)) {
@@ -1243,7 +1397,8 @@ public class XCS {
         this.P.add(child);
     }
 
-    private Classifier selectOffspring(List<Classifier> a) {
+    @NotNull
+    private Classifier selectOffspring(@NotNull List<Classifier> a) {
         // TODO : SELECT OFFSPRING in [A]
         double fitnessSum = 0.0;
         for(Classifier cl : a) {
@@ -1260,7 +1415,8 @@ public class XCS {
         throw new RuntimeException("Reached end of select offspring method without selecting offspring");
     }
 
-    private void performActionSetSubsumption(List<Classifier> a) {
+    private void performActionSetSubsumption(@NotNull List<Classifier> a) {
+    assert false;
         // DO ACTION SET SUBSUMPTION in [A] updating [P]
         Optional<Classifier> cl = Optional.empty();
 
@@ -1453,12 +1609,16 @@ public class XCS {
         List<Double> lastNScores = new ArrayList<>();
         int n = 200;
         int problemCount = 500;
-        ReinforcementProgram rp = new ReinforcementProgram(1.0, 0.0);
+        ReinforcementProgram rp = new ReinforcementProgram(1000.0, 0.0);
         Environment env = new Environment(problemCount);
         XCS xcs = new XCS(env, rp);
-        xcs.setN(300);
-        xcs.setDoGASubsumption(true);
-        xcs.setTheta_mna(20);
+        xcs.setMew(0.001);
+        xcs.setTheta_GA(10000);
+        int n1 = 1000;
+        xcs.setN(n1);
+//        xcs.setN(300);
+        xcs.setDoGASubsumption(false);
+//        xcs.setTheta_mna(20);
         xcs.setDoActionSetSubsumption(false);
 
         int iterationCount = 0;
@@ -1486,6 +1646,13 @@ public class XCS {
                 double sd = Math.sqrt(var);
 
                 System.out.println("[" + iterationCount + "]: Average of last " + n + ": " + xbar + ", sd: " + sd);
+                n1 += 100;
+                xcs.setN(n1++);
+                List<Classifier> correct = xcs.getTopN(100).stream().filter(classifier -> ReinforcementProgram.isCorrect(Classifier.GenerateMatching(classifier), classifier.getAction())).collect(Collectors.toList());
+                List<Classifier> incorrect = xcs.getTopN(100).stream().filter(classifier -> !ReinforcementProgram.isCorrect(Classifier.GenerateMatching(classifier), classifier.getAction())).collect(Collectors.toList());
+
+                System.out.println("Correct("+correct.size() +"): "+ correct);
+                System.out.println("Incorrect(" + incorrect.size() + "): "+ incorrect);
                 lastNScores.clear();
             }
         }
