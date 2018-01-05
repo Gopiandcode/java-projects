@@ -798,7 +798,7 @@ class Classifier {
     }
 
     public static boolean doesSubsume(@NotNull Classifier sub, @NotNull Classifier tos, double theta_sub, double epsilon_nought) {
-        if(sub.getAction() == tos.getAction())
+        if(sub.getAction().equals(tos.getAction()))
             if(Classifier.couldSubsume(sub, theta_sub, epsilon_nought))
                 if(Classifier.isMoreGeneral(sub, tos))
                     return true;
@@ -1416,7 +1416,6 @@ public List<Classifier> getTopN(long n){
     }
 
     private void performActionSetSubsumption(@NotNull List<Classifier> a) {
-    assert false;
         // DO ACTION SET SUBSUMPTION in [A] updating [P]
         Optional<Classifier> cl = Optional.empty();
 
@@ -1612,14 +1611,12 @@ public List<Classifier> getTopN(long n){
         ReinforcementProgram rp = new ReinforcementProgram(1000.0, 0.0);
         Environment env = new Environment(problemCount);
         XCS xcs = new XCS(env, rp);
-        xcs.setMew(0.001);
-        xcs.setTheta_GA(10000);
-        int n1 = 1000;
-        xcs.setN(n1);
+//        xcs.setMew(0.001);
+//        xcs.setTheta_GA(10000);
 //        xcs.setN(300);
-        xcs.setDoGASubsumption(false);
+        xcs.setDoGASubsumption(true);
 //        xcs.setTheta_mna(20);
-        xcs.setDoActionSetSubsumption(false);
+        xcs.setDoActionSetSubsumption(true);
 
         int iterationCount = 0;
 
@@ -1646,13 +1643,7 @@ public List<Classifier> getTopN(long n){
                 double sd = Math.sqrt(var);
 
                 System.out.println("[" + iterationCount + "]: Average of last " + n + ": " + xbar + ", sd: " + sd);
-                n1 += 100;
-                xcs.setN(n1++);
-                List<Classifier> correct = xcs.getTopN(100).stream().filter(classifier -> ReinforcementProgram.isCorrect(Classifier.GenerateMatching(classifier), classifier.getAction())).collect(Collectors.toList());
-                List<Classifier> incorrect = xcs.getTopN(100).stream().filter(classifier -> !ReinforcementProgram.isCorrect(Classifier.GenerateMatching(classifier), classifier.getAction())).collect(Collectors.toList());
 
-                System.out.println("Correct("+correct.size() +"): "+ correct);
-                System.out.println("Incorrect(" + incorrect.size() + "): "+ incorrect);
                 lastNScores.clear();
             }
         }
