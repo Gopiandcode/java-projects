@@ -3,6 +3,8 @@
  */
 package com.gopiandcode.xcs;
 
+import com.gopiandcode.xcs.graphing.GraphRenderer;
+import com.gopiandcode.xcs.graphing.GraphingLogger;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -705,34 +707,36 @@ public List<Classifier> getTopN(long n){
     }
 
     public static void main(String[] args) {
+        GraphingLogger logger = new GraphingLogger("XCS Accuracy over Training Iterations");
         List<Double> lastNScores = new ArrayList<>();
-        int n = 200;
-        int problemCount = 500;
+        int n = 10;
+        int problemCount = 10;
         ReinforcementProgram rp = new ReinforcementProgram(1000.0, 0.0);
         Environment env = new Environment(problemCount);
         XCS xcs = new XCS(env, rp);
-//        xcs.setMew(0.001);
+        xcs.setMew(0.001);
 //        xcs.setTheta_GA(10000);
 //        xcs.setN(300);
-        xcs.setDoGASubsumption(true);
+        xcs.setDoGASubsumption(false);
 //        xcs.setTheta_mna(20);
-        xcs.setDoActionSetSubsumption(true);
+        xcs.setDoActionSetSubsumption(false);
 
         int iterationCount = 0;
 
-        for(int i = 0; i < 1000000; i++) {
+        for(int i = 0; i < 1000; i++) {
             while (xcs.runSingleTrainIteration()) {
                 iterationCount++;
             }
-//            System.out.println("[" + iterationCount + "]: " + rp.getSystemScorer().getAccuracy() * 100 + "%");
+
             lastNScores.add(rp.getSystemScorer().getAccuracy()*100);
             if(lastNScores.size() > n) {
                 lastNScores.remove(0);
             }
-            iterationCount = 0;
+
             xcs.setEnv(new Environment(problemCount));
             rp.getSystemScorer().reset();
-            if(i%Math.max(30,n) == 0 && lastNScores.size() > 0) {
+
+            if(i%Math.max(1,n) == 0 && lastNScores.size() > 0) {
                 double sx = lastNScores.stream().reduce(Double::sum).orElse(0.0);
                 double sx2 = lastNScores.stream().map(x -> x * x).reduce(Double::sum).orElse(0.0);
 
@@ -744,9 +748,14 @@ public List<Classifier> getTopN(long n){
 
                 System.out.println("[" + iterationCount + "]: Average of last " + n + ": " + xbar + ", sd: " + sd);
 
+                logger.recordAccuracyAtIteration(xbar, iterationCount);
+
                 lastNScores.clear();
             }
         }
+
+        GraphRenderer renderer = new GraphRenderer(logger, 1280, 720);
+        renderer.save("result.png");
 
     }
 }
