@@ -1,6 +1,6 @@
-package com.gopiandcode.xcs;
+package com.gopiandcode.lcs.problem;
 /**
- * XCS Implementation - Based on An Algorithmic Description of XCS - Martin V. Butz and Stewart W.Wilson
+ * XCSBinaryClassifier Implementation - Based on An Algorithmic Description of XCSBinaryClassifier - Martin V. Butz and Stewart W.Wilson
  */
 
 public enum BinaryAlphabet {

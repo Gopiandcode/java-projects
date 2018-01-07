@@ -1,4 +1,4 @@
-package com.gopiandcode.xcs.graphing;
+package com.gopiandcode.lcs.graphing;
 
 import org.jetbrains.annotations.NotNull;
 import org.jfree.chart.ChartPanel;
@@ -16,10 +16,10 @@ public class GraphRenderer extends JFrame {
     private final int HEIGHT;
     private final JFreeChart chart;
 
-    public GraphRenderer(GraphingLogger log, int width, int height) {
+    public GraphRenderer(GraphingLogger log, int width, int height, int ticks) {
         WIDTH = width;
         HEIGHT = height;
-        chart = log.constructGraph();
+        chart = log.constructGraph(ticks);
 
         ChartPanel panel = new ChartPanel(decorateChart());
         panel.setPreferredSize(new Dimension(WIDTH, HEIGHT));
@@ -30,8 +30,8 @@ public class GraphRenderer extends JFrame {
        EventQueue.invokeLater(() -> this.setVisible(true));
     }
 
-    public GraphRenderer(GraphingLogger log) {
-        this(log, 560, 367);
+    public GraphRenderer(GraphingLogger log, int ticks) {
+        this(log, 560, 367, ticks);
     }
 
     public void save(String filename, int width, int height) {

@@ -1,5 +1,8 @@
-package com.gopiandcode.xcs;
+package com.gopiandcode.lcs.internal;
 
+import com.gopiandcode.lcs.problem.BinaryAlphabet;
+import com.gopiandcode.lcs.problem.Situation;
+import com.gopiandcode.lcs.problem.TernaryAlphabet;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 

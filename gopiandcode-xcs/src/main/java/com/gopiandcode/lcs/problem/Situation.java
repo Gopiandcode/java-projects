@@ -1,4 +1,4 @@
-package com.gopiandcode.xcs;
+package com.gopiandcode.lcs.problem;
 
 import org.jetbrains.annotations.NotNull;
 
@@ -13,11 +13,11 @@ public class Situation {
         return values;
     }
 
-    Situation(BinaryAlphabet[] values) {
+    public Situation(BinaryAlphabet[] values) {
         this.values = values;
     }
 
-    Situation(@NotNull String representation) {
+    public Situation(@NotNull String representation) {
         values = new BinaryAlphabet[representation.length()];
         for (int i = 0; i < representation.length(); i++) {
             switch (representation.charAt(i)) {

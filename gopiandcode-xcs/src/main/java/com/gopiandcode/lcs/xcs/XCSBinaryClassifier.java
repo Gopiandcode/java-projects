@@ -1,12 +1,16 @@
 /**
- * XCS Implementation - Based on An Algorithmic Description of XCS - Martin V. Butz and Stewart W.Wilson
+ * XCSBinaryClassifier Implementation - Based on An Algorithmic Description of XCSBinaryClassifier - Martin V. Butz and Stewart W.Wilson
  */
-package com.gopiandcode.xcs;
+package com.gopiandcode.lcs.xcs;
 
-import com.gopiandcode.xcs.graphing.GraphRenderer;
-import com.gopiandcode.xcs.graphing.GraphingLogger;
+import com.gopiandcode.lcs.problem.BinaryAlphabet;
+import com.gopiandcode.lcs.problem.BinaryClassifier;
+import com.gopiandcode.lcs.internal.Classifier;
+import com.gopiandcode.lcs.problem.Situation;
+import com.gopiandcode.lcs.dataset.BinaryClassifierTestData;
+import com.gopiandcode.lcs.internal.Action;
+import com.gopiandcode.lcs.internal.PredictionArray;
 import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
 
 import java.util.*;
 import java.util.concurrent.ThreadLocalRandom;
@@ -14,8 +18,7 @@ import java.util.stream.Collectors;
 
 import static java.util.concurrent.ThreadLocalRandom.current;
 
-
-public class XCS {
+public class XCSBinaryClassifier implements BinaryClassifier {
     /**
      * Maximum size of population
      * <p>
@@ -170,75 +173,53 @@ public class XCS {
     @NotNull
     private List<Classifier> A_1 = new ArrayList<>();
 
-    private Environment env;
-    private ReinforcementProgram rp;
+    private double rewardForCorrectClassification = 1000;
+    private double rewardForInCorrectClassification = 0;
 
-    public XCS(Environment env, ReinforcementProgram rp) {
-        this.env = env;
-        this.rp = rp;
-    }
 
-    public void setEnv(Environment env) {
-        this.env = env;
-    }
 
-    public void initializeXCS() {
-        for (int i = 0; i < this.N; i++) {
-            Classifier child = new Classifier(
-                    Condition.createRandom(env.getProblemSize(), this.P_sharp),
-                    Action.createRandom());
-            child.initialize(p_I, e_I, F_I, t);
-            this.insertIntoPopulation(child
-            );
-        }
-    }
-
-    public boolean runSingleTrainIteration() {
-        Optional<Situation> nextSituation = env.getSituation(this.t);
-        if (!nextSituation.isPresent()) {
-            return false;
-        }
-        Situation sigma = nextSituation.get();
+    @Override
+    public boolean runSingleTrainIteration(BinaryClassifierTestData data) {
+        Situation sigma = data.getSituation();
         this.generateMatchSet(sigma);
-        PredictionArray PA = this.generatePredictionArray();
+        PredictionArray PA = PredictionArray.generatePredictionArray(this.M);
         Action act = this.selectActionUsing(PA);
         this.generateActionSet(act);
-        double p = rp.getRewardForAction(sigma, act);
-        if (this.A_1.size() > 0) {
-            assert false;
-            double Ptemp = this.p_1 + this.gamma * PA.findMax();
-            this.updateLastActionSet(Ptemp);
-            this.runGAOnLastActionSet(this.sigma_1);
-        }
-        if (env.isEndOfProblem()) {
-            double Ptemp = p;
-            this.updateCurrentActionSet(Ptemp);
-            this.runGAOnCurrentActionSet(sigma);
-            this.A_1.clear();
+        double p;
+        boolean isCorrect;
+        if (data.getAction().equals(act)) {
+            p = rewardForCorrectClassification;
+            isCorrect = true;
         } else {
-            assert false;
-            this.A_1.addAll(this.A);
-            this.p_1 = p;
-            this.sigma_1 = sigma;
+           p = rewardForInCorrectClassification;
+           isCorrect = false;
         }
-        t++;
-        return true;
-    }
 
-    private void runGAOnLastActionSet(@NotNull Situation sigma_1) {
-        this.runGAOnActionSet(this.A_1, sigma_1);
-    }
-
-    private void runGAOnCurrentActionSet(@NotNull Situation sigma) {
-        this.runGAOnActionSet(this.A, sigma);
-    }
-
-    private void updateCurrentActionSet(double p) {
+//         for multistep problems
+//        if (this.A_1.size() > 0) {
+//            double Ptemp = this.p_1 + this.gamma * PA.findMax();
+//            this.updateActionSet(this.A_1, Ptemp);
+//            this.runGAOnActionSet(this.A_1, this.sigma_1);
+//        }
+//        if (endOfProblem) {
         this.updateActionSet(this.A, p);
+        this.runGAOnActionSet(this.A, sigma);
+        this.A_1.clear();
+//        } else {
+//            assert false;
+//            this.A_1.addAll(this.A);
+//            this.p_1 = p;
+//            this.sigma_1 = sigma;
+//        }
+        t++;
+        return isCorrect;
     }
 
-    private void updateLastActionSet(double p) {
-        this.updateActionSet(this.A_1, p);
+    @Override
+    public Action classify(Situation sigma) {
+        this.generateMatchSet(sigma);
+        PredictionArray PA = PredictionArray.generatePredictionArray(this.M);
+        return this.selectActionUsing(PA);
     }
 
     private void generateActionSet(Action act) {
@@ -259,10 +240,6 @@ public class XCS {
         }
     }
 
-    private PredictionArray generatePredictionArray() {
-        return PredictionArray.generatePredictionArray(this.M);
-    }
-
     private void generateMatchSet(@NotNull Situation sigma) {
         // [M] <- Generate Match set out of [P] using Sigma
         this.M.clear();
@@ -275,7 +252,7 @@ public class XCS {
 
             Set<BinaryAlphabet> actions = new HashSet<>();
             for (Classifier classifier : this.M) {
-               actions.add(classifier.getAction().getClassification());
+                actions.add(classifier.getAction().getClassification());
             }
             if (actions.size() < this.theta_mna) {
                 Classifier cl_c = this.generateCoveringClassifier(sigma);
@@ -430,18 +407,15 @@ public class XCS {
         }
 
     }
-public List<Classifier> getTopN(long n){
 
-       return this.P.stream().sorted((o1, o2) -> -1 * Double.compare(o1.getF(), o2.getF())).limit(n).collect(Collectors.toList());
-}
     private void runGAOnActionSet(@NotNull List<Classifier> a, @NotNull Situation sigma) {
         // TODO: RUN GA in A considering sigma_1 inserting and possibly deleting in [P]
 
         Double actionSetSize = a.stream().map(Classifier::getN).reduce(Double::sum).orElse(0.0);
         Double averageActionSetTime = a.stream()
-                .map(classifier -> classifier.getTs() * classifier.getN())
-                .reduce(Double::sum)
-                .orElse(0.0) / actionSetSize;
+                                       .map(classifier -> classifier.getTs() * classifier.getN())
+                                       .reduce(Double::sum)
+                                       .orElse(0.0) / actionSetSize;
         if (this.t - averageActionSetTime > this.theta_GA) {
             for (Classifier cl : a) {
                 cl.setTs(t);
@@ -460,22 +434,24 @@ public List<Classifier> getTopN(long n){
                 child1.initialize(
                         (parent1.getP() + parent2.getP()) / 2,
                         (parent1.getE() + parent2.getE()) / 2,
-                        (parent1.getF() + parent2.getF()) / 2, t);
+                        (parent1.getF() + parent2.getF()) / 2, t
+                );
                 child2.initialize(
                         (parent1.getP() + parent2.getP()) / 2,
                         (parent1.getE() + parent2.getE()) / 2,
-                        (parent1.getF() + parent2.getF()) / 2, t);
+                        (parent1.getF() + parent2.getF()) / 2, t
+                );
             }
             child1.setF(child1.getF() * 0.1);
             child2.setF(child2.getF() * 0.1);
 
-            for(Classifier child : Arrays.asList(child1, child2)) {
+            for (Classifier child : Arrays.asList(child1, child2)) {
                 child.mutate(sigma, mew);
-                if(this.doGASubsumption) {
+                if (this.doGASubsumption) {
                     assert false;
-                    if(Classifier.doesSubsume(parent1, child, this.epsilon_nought, this.theta_sub)) {
+                    if (Classifier.doesSubsume(parent1, child, this.epsilon_nought, this.theta_sub)) {
                         parent1.setN(parent1.getN() + 1);
-                    } else if(Classifier.doesSubsume(parent2, child, this.epsilon_nought, this.theta_sub)) {
+                    } else if (Classifier.doesSubsume(parent2, child, this.epsilon_nought, this.theta_sub)) {
                         parent2.setN(parent2.getN() + 1);
                     } else {
                         this.insertIntoPopulation(child);
@@ -490,8 +466,8 @@ public List<Classifier> getTopN(long n){
 
     private void insertIntoPopulation(@NotNull Classifier child) {
         // INSERT child into [P]
-        for(Classifier cl : this.P) {
-            if(cl.isSame(child)) {
+        for (Classifier cl : this.P) {
+            if (cl.isSame(child)) {
                 cl.setN(cl.getN() + 1);
                 return;
             }
@@ -503,14 +479,14 @@ public List<Classifier> getTopN(long n){
     private Classifier selectOffspring(@NotNull List<Classifier> a) {
         // TODO : SELECT OFFSPRING in [A]
         double fitnessSum = 0.0;
-        for(Classifier cl : a) {
+        for (Classifier cl : a) {
             fitnessSum += cl.getF();
         }
         double choicePoint = ThreadLocalRandom.current().nextDouble() * fitnessSum;
         fitnessSum = 0.0;
-        for(Classifier cl : a) {
+        for (Classifier cl : a) {
             fitnessSum += cl.getF();
-            if(fitnessSum > choicePoint) {
+            if (fitnessSum > choicePoint) {
                 return cl;
             }
         }
@@ -521,15 +497,15 @@ public List<Classifier> getTopN(long n){
         // DO ACTION SET SUBSUMPTION in [A] updating [P]
         Optional<Classifier> cl = Optional.empty();
 
-        for(Classifier c : a) {
-           if(Classifier.couldSubsume(c, this.theta_sub, this.epsilon_nought)) {
-               if (!cl.isPresent() || c.getCondition().hashCount() > cl.get().getCondition().hashCount() ||
-                       (c.getCondition().hashCount() == cl.get().getCondition().hashCount() && ThreadLocalRandom.current().nextDouble() < 0.5)
-                       ) {
+        for (Classifier c : a) {
+            if (Classifier.couldSubsume(c, this.theta_sub, this.epsilon_nought)) {
+                if (!cl.isPresent() || c.getCondition().hashCount() > cl.get().getCondition().hashCount() ||
+                    (c.getCondition().hashCount() == cl.get().getCondition().hashCount() && ThreadLocalRandom.current().nextDouble() < 0.5)
+                        ) {
 
-                   cl = Optional.of(c);
-               }
-           }
+                    cl = Optional.of(c);
+                }
+            }
         }
 
         cl.ifPresent(classifier -> {
@@ -544,6 +520,11 @@ public List<Classifier> getTopN(long n){
                 }
             }
         });
+    }
+
+    public List<Classifier> getTopN(long n) {
+
+        return this.P.stream().sorted((o1, o2) -> -1 * Double.compare(o1.getF(), o2.getF())).limit(n).collect(Collectors.toList());
     }
 
     public long getN() {
@@ -707,55 +688,74 @@ public List<Classifier> getTopN(long n){
     }
 
     public static void main(String[] args) {
-        GraphingLogger logger = new GraphingLogger("XCS Accuracy over Training Iterations");
-        List<Double> lastNScores = new ArrayList<>();
-        int n = 10;
-        int problemCount = 10;
-        ReinforcementProgram rp = new ReinforcementProgram(1000.0, 0.0);
-        Environment env = new Environment(problemCount);
-        XCS xcs = new XCS(env, rp);
-        xcs.setMew(0.001);
-//        xcs.setTheta_GA(10000);
-//        xcs.setN(300);
-        xcs.setDoGASubsumption(false);
-//        xcs.setTheta_mna(20);
-        xcs.setDoActionSetSubsumption(false);
+//        GraphingLogger logger = new GraphingLogger("XCSBinaryClassifier Accuracy over Training Iterations");
+//        List<Double> lastNScores = new ArrayList<>();
+//        int n = 10;
+//        int problemCount = 10;
+//        ReinforcementProgram rp = new MultiplexerReinforcementProgram(1000.0, 0.0);
+//        Environment env = new Environment(problemCount);
+//        XCSBinaryClassifier lcs = new XCSBinaryClassifier();
+//        lcs.setMew(0.001);
+////        lcs.setTheta_GA(10000);
+////        lcs.setN(300);
+//        lcs.setDoGASubsumption(false);
+////        lcs.setTheta_mna(20);
+//        lcs.setDoActionSetSubsumption(false);
+//
+//        int iterationCount = 0;
+//
+//        for (int i = 0; i < 1000; i++) {
+//            Optional<Situation> value = env.getSituation(iterationCount);
+//            while (value.isPresent()) {
+//                lcs.runSingleTrainIteration(value.get(), env.isEndOfProblem());
+//                value = env.getSituation(iterationCount);
+//                iterationCount++;
+//            }
+//
+//            lastNScores.add(rp.getSystemScorer().getAccuracy() * 100);
+//            if (lastNScores.size() > n) {
+//                lastNScores.remove(0);
+//            }
+//
+//            env = (new Environment(problemCount));
+//            rp.getSystemScorer().reset();
+//
+//            if (i % Math.max(1, n) == 0 && lastNScores.size() > 0) {
+//                double sx = lastNScores.stream().reduce(Double::sum).orElse(0.0);
+//                double sx2 = lastNScores.stream().map(x -> x * x).reduce(Double::sum).orElse(0.0);
+//
+//                double xbar = sx / lastNScores.size();
+//                double x2bar = sx2 / lastNScores.size();
+//
+//                double var = x2bar - xbar * xbar;
+//                double sd = Math.sqrt(var);
+//
+//                System.out.println("[" + iterationCount + "]: Average of last " + n + ": " + xbar + ", sd: " + sd);
+//
+//                logger.recordAccuracyAtIteration(xbar, iterationCount);
+//
+//                lastNScores.clear();
+//            }
+//        }
+//
+//        GraphRenderer renderer = new GraphRenderer(logger, 1280, 720);
+//        renderer.save("result.png");
 
-        int iterationCount = 0;
+    }
 
-        for(int i = 0; i < 1000; i++) {
-            while (xcs.runSingleTrainIteration()) {
-                iterationCount++;
-            }
+    public double getRewardForInCorrectClassification() {
+        return rewardForInCorrectClassification;
+    }
 
-            lastNScores.add(rp.getSystemScorer().getAccuracy()*100);
-            if(lastNScores.size() > n) {
-                lastNScores.remove(0);
-            }
+    public void setRewardForInCorrectClassification(double rewardForInCorrectClassification) {
+        this.rewardForInCorrectClassification = rewardForInCorrectClassification;
+    }
 
-            xcs.setEnv(new Environment(problemCount));
-            rp.getSystemScorer().reset();
+    public double getRewardForCorrectClassification() {
+        return rewardForCorrectClassification;
+    }
 
-            if(i%Math.max(1,n) == 0 && lastNScores.size() > 0) {
-                double sx = lastNScores.stream().reduce(Double::sum).orElse(0.0);
-                double sx2 = lastNScores.stream().map(x -> x * x).reduce(Double::sum).orElse(0.0);
-
-                double xbar = sx / lastNScores.size();
-                double x2bar = sx2 / lastNScores.size();
-
-                double var = x2bar - xbar * xbar;
-                double sd = Math.sqrt(var);
-
-                System.out.println("[" + iterationCount + "]: Average of last " + n + ": " + xbar + ", sd: " + sd);
-
-                logger.recordAccuracyAtIteration(xbar, iterationCount);
-
-                lastNScores.clear();
-            }
-        }
-
-        GraphRenderer renderer = new GraphRenderer(logger, 1280, 720);
-        renderer.save("result.png");
-
+    public void setRewardForCorrectClassification(double rewardForCorrectClassification) {
+        this.rewardForCorrectClassification = rewardForCorrectClassification;
     }
 }

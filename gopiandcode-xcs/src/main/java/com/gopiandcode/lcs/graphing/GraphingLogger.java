@@ -1,23 +1,17 @@
-package com.gopiandcode.xcs.graphing;
+package com.gopiandcode.lcs.graphing;
 
 import org.jfree.chart.ChartFactory;
-import org.jfree.chart.ChartUtilities;
 import org.jfree.chart.JFreeChart;
 import org.jfree.chart.axis.NumberAxis;
 import org.jfree.chart.axis.NumberTickUnit;
-import org.jfree.chart.axis.ValueAxis;
 import org.jfree.chart.plot.PlotOrientation;
-import org.jfree.data.category.CategoryDataset;
-import org.jfree.data.category.DefaultCategoryDataset;
-import org.jfree.data.xy.XYDataset;
 import org.jfree.data.xy.XYSeries;
 import org.jfree.data.xy.XYSeriesCollection;
-
-import java.io.File;
 
 public class GraphingLogger {
     private XYSeries dataset;
     private String title;
+    private int maxIteration = 0;
     public GraphingLogger(String title) {
        dataset = new XYSeries("accuracy");
        this.title = title;
@@ -25,9 +19,10 @@ public class GraphingLogger {
 
     public void recordAccuracyAtIteration(double accuracy, int iteration) {
        dataset.add(iteration, accuracy);
+       maxIteration = iteration;
     }
 
-    public JFreeChart constructGraph() {
+    public JFreeChart constructGraph(int ticks) {
        JFreeChart chart = ChartFactory.createXYLineChart(
                title,
                "Iteration (count)",
@@ -39,7 +34,7 @@ public class GraphingLogger {
               false
                );
         NumberAxis domainAxis = (NumberAxis) chart.getXYPlot().getDomainAxis();
-        domainAxis.setTickUnit(new NumberTickUnit(1000));
+        domainAxis.setTickUnit(new NumberTickUnit(Math.max(Math.floor((double)maxIteration/ticks), 1)));
         return chart;
     }
 

@@ -1,5 +1,6 @@
-package com.gopiandcode.xcs;
+package com.gopiandcode.lcs.internal;
 
+import com.gopiandcode.lcs.problem.BinaryAlphabet;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -10,6 +11,18 @@ public class Action {
 
     private Action(BinaryAlphabet classification) {
         this.classification = classification;
+    }
+    public Action(String representation) {
+       switch (representation) {
+           case "0":
+               classification = BinaryAlphabet.ZERO;
+               break;
+           case "1":
+               classification = BinaryAlphabet.ONE;
+               break;
+           default:
+               throw new IllegalArgumentException("Could not parse string");
+       }
     }
 
     public BinaryAlphabet getClassification() {

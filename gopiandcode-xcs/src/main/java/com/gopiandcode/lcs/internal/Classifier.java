@@ -1,5 +1,8 @@
-package com.gopiandcode.xcs;
+package com.gopiandcode.lcs.internal;
 
+import com.gopiandcode.lcs.problem.BinaryAlphabet;
+import com.gopiandcode.lcs.problem.TernaryAlphabet;
+import com.gopiandcode.lcs.problem.Situation;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.concurrent.ThreadLocalRandom;

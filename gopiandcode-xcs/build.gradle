@@ -1,4 +1,4 @@
-group 'gopiandcode-xcs'
+group 'gopiandcode-lcs'
 version '1.0-SNAPSHOT'
 
 apply plugin: 'java'

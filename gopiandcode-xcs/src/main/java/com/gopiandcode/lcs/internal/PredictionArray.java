@@ -1,4 +1,4 @@
-package com.gopiandcode.xcs;
+package com.gopiandcode.lcs.internal;
 
 import org.jetbrains.annotations.NotNull;
 
