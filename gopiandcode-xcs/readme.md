@@ -1,3 +1,11 @@
+# RCS Learning Classifier Systme Java Implementation
+Reference: me.
+
+This is an implementation of an algorithm I'm working on. It's a modification of a standard XCS, which is also present in this repo.
+
+Produces sweet graphs:
+![Example Output Graph](https://github.com/Gopiandcode/java-projects/blob/master/gopiandcode-xcs/result6_rcs_2.png)
+
 # XCS Learning Classifier System Java Implementation
 Reference: An Algorithmic Description of XCS - Martin V. Butz and Stewart W. Wilson
 
