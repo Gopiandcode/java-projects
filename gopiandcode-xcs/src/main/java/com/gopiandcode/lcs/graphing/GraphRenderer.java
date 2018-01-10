@@ -1,10 +1,12 @@
 package com.gopiandcode.lcs.graphing;
 
+import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
 import org.jfree.chart.ChartPanel;
 import org.jfree.chart.ChartUtilities;
 import org.jfree.chart.JFreeChart;
 import org.jfree.chart.renderer.xy.XYLineAndShapeRenderer;
+import org.jfree.chart.renderer.xy.XYSplineRenderer;
 
 import javax.swing.*;
 import java.awt.*;
@@ -48,58 +50,13 @@ public class GraphRenderer extends JFrame {
 
     @NotNull
     private JFreeChart decorateChart() {
-        XYLineAndShapeRenderer renderer = new XYLineAndShapeRenderer();
+        XYSplineRenderer renderer = new XYSplineRenderer();
         renderer.setSeriesPaint(0, Color.RED);
+        renderer.setSeriesShapesVisible(0, false);
         chart.getXYPlot().setRenderer(renderer);
         return chart;
     }
 
 }
 
-/*
 
-    private String title;
-
-    public GraphRenderer(String title) {
-        this.title = title;
-        this.add(createDemoPanel());
-        this.pack();
-    }
-
-    private static PieDataset createDataset() {
-        DefaultPieDataset dataset = new DefaultPieDataset();
-        dataset.setValue("IPhone 5s", new Double(20));
-        dataset.setValue("Samsung Grand", new Double(20));
-        dataset.setValue("MotoG", new Double(40));
-        dataset.setValue("Nokia Lumia", new Double(10));
-        return dataset;
-    }
-
-    private static JFreeChart createChart(PieDataset dataset) {
-        JFreeChart chart = ChartFactory.createPieChart(
-                "Mobile Sales",
-                dataset,
-                true,
-                true,
-                false
-        );
-
-        return chart;
-    }
-
-
-    public static JPanel createDemoPanel() {
-        JFreeChart chart = createChart(createDataset());
-        return new ChartPanel(chart);
-    }
-
-    public static void main(String[] args) {
-        GraphRenderer renderer = new GraphRenderer("Awesome");
-
-        EventQueue.invokeLater(() -> {
-           renderer.setVisible(true);
-        });
-
-    }
-
- */

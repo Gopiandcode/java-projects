@@ -79,7 +79,7 @@ public class BinaryClassifierTestRunner {
 
             i++;
        }
-        return correctlyPredicted/count;
+        return (double)correctlyPredicted/(double)count;
     }
 
     public void setShouldReset(boolean shouldReset) {

@@ -45,7 +45,7 @@ public class Situation {
                     value = BinaryAlphabet.ONE;
                     break;
                 default:
-                    throw new RuntimeException("Unknown random value recieved in creating Condition");
+                    throw new RuntimeException("Unknown random value recieved in creating XCSCondition");
             }
             binaryAlphabets[i] = value;
         }
@@ -79,5 +79,14 @@ public class Situation {
     @Override
     public int hashCode() {
         return Arrays.hashCode(values);
+    }
+
+    public Situation copy() {
+       return copy(this);
+    }
+
+    public static Situation copy(Situation situation) {
+        BinaryAlphabet[] values = situation.getValues();
+        return new Situation(Arrays.copyOf(values, values.length));
     }
 }

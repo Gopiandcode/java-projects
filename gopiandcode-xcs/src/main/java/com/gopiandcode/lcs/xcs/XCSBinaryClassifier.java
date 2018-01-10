@@ -5,11 +5,9 @@ package com.gopiandcode.lcs.xcs;
 
 import com.gopiandcode.lcs.problem.BinaryAlphabet;
 import com.gopiandcode.lcs.problem.BinaryClassifier;
-import com.gopiandcode.lcs.internal.Classifier;
 import com.gopiandcode.lcs.problem.Situation;
 import com.gopiandcode.lcs.dataset.BinaryClassifierTestData;
-import com.gopiandcode.lcs.internal.Action;
-import com.gopiandcode.lcs.internal.PredictionArray;
+import com.gopiandcode.lcs.problem.Action;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.*;
@@ -156,22 +154,22 @@ public class XCSBinaryClassifier implements BinaryClassifier {
      * population - all classifiers that exist at time t
      */
     @NotNull
-    private List<Classifier> P = new ArrayList<>();
+    private List<XCSClassifier> P = new ArrayList<>();
     /**
      * match set formed from P - includes all classifiers that match the current situation
      */
     @NotNull
-    private List<Classifier> M = new ArrayList<>();
+    private List<XCSClassifier> M = new ArrayList<>();
     /**
      * action set formed from M - includes all classifiers of M which propose executed action
      */
     @NotNull
-    private List<Classifier> A = new ArrayList<>();
+    private List<XCSClassifier> A = new ArrayList<>();
     /**
      * previous action set
      */
     @NotNull
-    private List<Classifier> A_1 = new ArrayList<>();
+    private List<XCSClassifier> A_1 = new ArrayList<>();
 
     private double rewardForCorrectClassification = 1000;
     private double rewardForInCorrectClassification = 0;
@@ -182,7 +180,7 @@ public class XCSBinaryClassifier implements BinaryClassifier {
     public boolean runSingleTrainIteration(BinaryClassifierTestData data) {
         Situation sigma = data.getSituation();
         this.generateMatchSet(sigma);
-        PredictionArray PA = PredictionArray.generatePredictionArray(this.M);
+        XCSPredictionArray PA = XCSPredictionArray.generatePredictionArray(this.M);
         Action act = this.selectActionUsing(PA);
         this.generateActionSet(act);
         double p;
@@ -218,21 +216,21 @@ public class XCSBinaryClassifier implements BinaryClassifier {
     @Override
     public Action classify(Situation sigma) {
         this.generateMatchSet(sigma);
-        PredictionArray PA = PredictionArray.generatePredictionArray(this.M);
+        XCSPredictionArray PA = XCSPredictionArray.generatePredictionArray(this.M);
         return this.selectActionUsing(PA);
     }
 
     private void generateActionSet(Action act) {
         //  GENERATE ACTION SET out of [M] according to act
         this.A.clear();
-        for (Classifier cl : this.M) {
+        for (XCSClassifier cl : this.M) {
             if (cl.getAction().equals(act)) {
                 this.A.add(cl);
             }
         }
     }
 
-    private Action selectActionUsing(@NotNull PredictionArray PA) {
+    private Action selectActionUsing(@NotNull XCSPredictionArray PA) {
         if (current().nextDouble() < this.p_explr) {
             return PA.selectRandomAction();
         } else {
@@ -244,18 +242,18 @@ public class XCSBinaryClassifier implements BinaryClassifier {
         // [M] <- Generate Match set out of [P] using Sigma
         this.M.clear();
         while (this.M.isEmpty()) {
-            for (Classifier cl : this.P) {
+            for (XCSClassifier cl : this.P) {
                 if (cl.matches(sigma)) {
                     this.M.add(cl);
                 }
             }
 
             Set<BinaryAlphabet> actions = new HashSet<>();
-            for (Classifier classifier : this.M) {
+            for (XCSClassifier classifier : this.M) {
                 actions.add(classifier.getAction().getClassification());
             }
             if (actions.size() < this.theta_mna) {
-                Classifier cl_c = this.generateCoveringClassifier(sigma);
+                XCSClassifier cl_c = this.generateCoveringClassifier(sigma);
                 this.insertIntoPopulation(cl_c);
                 this.deleteFromPopulation();
                 this.M.clear();
@@ -264,8 +262,8 @@ public class XCSBinaryClassifier implements BinaryClassifier {
     }
 
     @NotNull
-    private Classifier generateCoveringClassifier(@NotNull Situation sigma) {
-        Classifier classifer = Classifier.coverSituation(sigma, this.selectActionFromMatchSet(), this.P_sharp);
+    private XCSClassifier generateCoveringClassifier(@NotNull Situation sigma) {
+        XCSClassifier classifer = XCSClassifier.coverSituation(sigma, this.selectActionFromMatchSet(), this.P_sharp);
         assert classifer.matches(sigma);
         classifer.initialize(this.p_I, this.e_I, this.F_I, this.t);
         return classifer;
@@ -274,7 +272,7 @@ public class XCSBinaryClassifier implements BinaryClassifier {
     @NotNull
     private Action selectActionFromMatchSet() {
         Set<Action> actionsInM = new HashSet<>();
-        for (Classifier cl : this.M) {
+        for (XCSClassifier cl : this.M) {
             actionsInM.add(cl.getAction());
         }
 
@@ -296,13 +294,13 @@ public class XCSBinaryClassifier implements BinaryClassifier {
         }
         double averagePopulationFitness = getAveragePopulationFitness(populationSize);
         double votesum = 0.0;
-        for (Classifier cl : this.P) {
+        for (XCSClassifier cl : this.P) {
             double deletionVoteFor = this.getDeletionVoteFor(cl, averagePopulationFitness);
             votesum += deletionVoteFor;
         }
         double choicePoint = ThreadLocalRandom.current().nextDouble() * votesum;
         votesum = 0;
-        for (Classifier cl : this.P) {
+        for (XCSClassifier cl : this.P) {
             votesum += this.getDeletionVoteFor(cl, averagePopulationFitness);
             if (votesum > choicePoint) {
                 if (cl.getN() > 1) {
@@ -315,7 +313,7 @@ public class XCSBinaryClassifier implements BinaryClassifier {
         }
     }
 
-    private double getDeletionVoteFor(@NotNull Classifier cl, double averagePopulationFitness) {
+    private double getDeletionVoteFor(@NotNull XCSClassifier cl, double averagePopulationFitness) {
         double vote = cl.getAs() * cl.getN();
         if (cl.getExp() > this.theta_del && cl.getF() / cl.getN() < this.delta * averagePopulationFitness) {
             vote *= averagePopulationFitness / (cl.getF() / cl.getN());
@@ -329,7 +327,7 @@ public class XCSBinaryClassifier implements BinaryClassifier {
 
     private double getAveragePopulationFitness(long populationSize) {
         double totalFitness = 0;
-        for (Classifier cl : this.P) {
+        for (XCSClassifier cl : this.P) {
             totalFitness += cl.getF();
         }
         return totalFitness / populationSize;
@@ -337,17 +335,17 @@ public class XCSBinaryClassifier implements BinaryClassifier {
 
     private long getPopulationSize() {
         long size = 0;
-        for (Classifier cl : this.P) {
+        for (XCSClassifier cl : this.P) {
             size += cl.getN();
         }
         return size;
     }
 
 
-    private void updateActionSet(@NotNull List<Classifier> a, double P) {
+    private void updateActionSet(@NotNull List<XCSClassifier> a, double P) {
         // TODO: UPDATE SET A using p possibly deleting in [P]
-        Double actionSetSize = a.stream().map(Classifier::getN).reduce(Double::sum).orElse(0.0);
-        for (Classifier cl : a) {
+        Double actionSetSize = a.stream().map(XCSClassifier::getN).reduce(Double::sum).orElse(0.0);
+        for (XCSClassifier cl : a) {
             // for each classifer cl in [a]
 
             cl.setExp(cl.getExp() + 1);
@@ -386,11 +384,11 @@ public class XCSBinaryClassifier implements BinaryClassifier {
         }
     }
 
-    private void updateFitnessActionSet(@NotNull List<Classifier> a) {
+    private void updateFitnessActionSet(@NotNull List<XCSClassifier> a) {
         // UPDATE fitness in set [A]
         double accuracySum = 0;
         List<Double> k = new ArrayList<>();
-        for (Classifier cl : a) {
+        for (XCSClassifier cl : a) {
             double value;
             if (cl.getE() < this.epsilon_nought) {
                 value = 1.0;
@@ -402,35 +400,35 @@ public class XCSBinaryClassifier implements BinaryClassifier {
         }
 
         for (int i = 0; i < a.size(); i++) {
-            Classifier cl = a.get(i);
+            XCSClassifier cl = a.get(i);
             cl.setF(cl.getF() + this.beta * (k.get(i) * cl.getN() / accuracySum - cl.getF()));
         }
 
     }
 
-    private void runGAOnActionSet(@NotNull List<Classifier> a, @NotNull Situation sigma) {
+    private void runGAOnActionSet(@NotNull List<XCSClassifier> a, @NotNull Situation sigma) {
         // TODO: RUN GA in A considering sigma_1 inserting and possibly deleting in [P]
 
-        Double actionSetSize = a.stream().map(Classifier::getN).reduce(Double::sum).orElse(0.0);
+        Double actionSetSize = a.stream().map(XCSClassifier::getN).reduce(Double::sum).orElse(0.0);
         Double averageActionSetTime = a.stream()
                                        .map(classifier -> classifier.getTs() * classifier.getN())
                                        .reduce(Double::sum)
                                        .orElse(0.0) / actionSetSize;
         if (this.t - averageActionSetTime > this.theta_GA) {
-            for (Classifier cl : a) {
+            for (XCSClassifier cl : a) {
                 cl.setTs(t);
             }
-            Classifier parent1 = this.selectOffspring(a);
-            Classifier parent2 = this.selectOffspring(a);
+            XCSClassifier parent1 = this.selectOffspring(a);
+            XCSClassifier parent2 = this.selectOffspring(a);
 
-            Classifier child1 = Classifier.copy(parent1);
-            Classifier child2 = Classifier.copy(parent2);
+            XCSClassifier child1 = XCSClassifier.copy(parent1);
+            XCSClassifier child2 = XCSClassifier.copy(parent2);
 
             child1.setN(1);
             child2.setN(1);
 
             if (ThreadLocalRandom.current().nextDouble() < this.x) {
-                Classifier.applyCrossover(child1, child2);
+                XCSClassifier.applyCrossover(child1, child2);
                 child1.initialize(
                         (parent1.getP() + parent2.getP()) / 2,
                         (parent1.getE() + parent2.getE()) / 2,
@@ -445,13 +443,13 @@ public class XCSBinaryClassifier implements BinaryClassifier {
             child1.setF(child1.getF() * 0.1);
             child2.setF(child2.getF() * 0.1);
 
-            for (Classifier child : Arrays.asList(child1, child2)) {
+            for (XCSClassifier child : Arrays.asList(child1, child2)) {
                 child.mutate(sigma, mew);
                 if (this.doGASubsumption) {
                     assert false;
-                    if (Classifier.doesSubsume(parent1, child, this.epsilon_nought, this.theta_sub)) {
+                    if (XCSClassifier.doesSubsume(parent1, child, this.epsilon_nought, this.theta_sub)) {
                         parent1.setN(parent1.getN() + 1);
-                    } else if (Classifier.doesSubsume(parent2, child, this.epsilon_nought, this.theta_sub)) {
+                    } else if (XCSClassifier.doesSubsume(parent2, child, this.epsilon_nought, this.theta_sub)) {
                         parent2.setN(parent2.getN() + 1);
                     } else {
                         this.insertIntoPopulation(child);
@@ -464,9 +462,9 @@ public class XCSBinaryClassifier implements BinaryClassifier {
         }
     }
 
-    private void insertIntoPopulation(@NotNull Classifier child) {
+    private void insertIntoPopulation(@NotNull XCSClassifier child) {
         // INSERT child into [P]
-        for (Classifier cl : this.P) {
+        for (XCSClassifier cl : this.P) {
             if (cl.isSame(child)) {
                 cl.setN(cl.getN() + 1);
                 return;
@@ -476,15 +474,15 @@ public class XCSBinaryClassifier implements BinaryClassifier {
     }
 
     @NotNull
-    private Classifier selectOffspring(@NotNull List<Classifier> a) {
+    private XCSClassifier selectOffspring(@NotNull List<XCSClassifier> a) {
         // TODO : SELECT OFFSPRING in [A]
         double fitnessSum = 0.0;
-        for (Classifier cl : a) {
+        for (XCSClassifier cl : a) {
             fitnessSum += cl.getF();
         }
         double choicePoint = ThreadLocalRandom.current().nextDouble() * fitnessSum;
         fitnessSum = 0.0;
-        for (Classifier cl : a) {
+        for (XCSClassifier cl : a) {
             fitnessSum += cl.getF();
             if (fitnessSum > choicePoint) {
                 return cl;
@@ -493,12 +491,12 @@ public class XCSBinaryClassifier implements BinaryClassifier {
         throw new RuntimeException("Reached end of select offspring method without selecting offspring");
     }
 
-    private void performActionSetSubsumption(@NotNull List<Classifier> a) {
+    private void performActionSetSubsumption(@NotNull List<XCSClassifier> a) {
         // DO ACTION SET SUBSUMPTION in [A] updating [P]
-        Optional<Classifier> cl = Optional.empty();
+        Optional<XCSClassifier> cl = Optional.empty();
 
-        for (Classifier c : a) {
-            if (Classifier.couldSubsume(c, this.theta_sub, this.epsilon_nought)) {
+        for (XCSClassifier c : a) {
+            if (XCSClassifier.couldSubsume(c, this.theta_sub, this.epsilon_nought)) {
                 if (!cl.isPresent() || c.getCondition().hashCount() > cl.get().getCondition().hashCount() ||
                     (c.getCondition().hashCount() == cl.get().getCondition().hashCount() && ThreadLocalRandom.current().nextDouble() < 0.5)
                         ) {
@@ -509,11 +507,11 @@ public class XCSBinaryClassifier implements BinaryClassifier {
         }
 
         cl.ifPresent(classifier -> {
-            Iterator<Classifier> iterator = a.iterator();
+            Iterator<XCSClassifier> iterator = a.iterator();
             while (iterator.hasNext()) {
-                Classifier c = iterator.next();
+                XCSClassifier c = iterator.next();
 
-                if (Classifier.isMoreGeneral(classifier, c)) {
+                if (XCSClassifier.isMoreGeneral(classifier, c)) {
                     classifier.setN(classifier.getN() + c.getN());
                     iterator.remove();
                     this.P.remove(c);
@@ -522,7 +520,7 @@ public class XCSBinaryClassifier implements BinaryClassifier {
         });
     }
 
-    public List<Classifier> getTopN(long n) {
+    public List<XCSClassifier> getTopN(long n) {
 
         return this.P.stream().sorted((o1, o2) -> -1 * Double.compare(o1.getF(), o2.getF())).limit(n).collect(Collectors.toList());
     }

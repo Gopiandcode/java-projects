@@ -1,5 +1,6 @@
-package com.gopiandcode.lcs.internal;
+package com.gopiandcode.lcs.xcs;
 
+import com.gopiandcode.lcs.problem.Action;
 import com.gopiandcode.lcs.problem.BinaryAlphabet;
 import com.gopiandcode.lcs.problem.TernaryAlphabet;
 import com.gopiandcode.lcs.problem.Situation;
@@ -7,9 +8,9 @@ import org.jetbrains.annotations.NotNull;
 
 import java.util.concurrent.ThreadLocalRandom;
 
-public class Classifier {
+public class XCSClassifier {
 
-    public static Situation GenerateMatching(Classifier cl) {
+    public static Situation GenerateMatching(XCSClassifier cl) {
         TernaryAlphabet[] values = cl.condition.getValues();
         BinaryAlphabet[] result = new BinaryAlphabet[values.length];
         for (int i = 0; i < values.length; i++) {
@@ -35,13 +36,13 @@ public class Classifier {
     @NotNull
     @Override
     public String toString() {
-        return "Classifier(" +
+        return "XCSClassifier(" +
                  condition +
                 " -> " + action +
                 ")(" + n + ")";
     }
 
-    private Condition condition;
+    private XCSCondition condition;
     private Action action;
     /**
      * acerage payoff expected if classifier matches and action used
@@ -70,7 +71,7 @@ public class Classifier {
     private double n;
     private boolean initialized;
 
-    public Classifier(Condition condition, Action action) {
+    public XCSClassifier(XCSCondition condition, Action action) {
         this.condition = condition;
         this.action = action;
         this.p = 0;
@@ -85,15 +86,15 @@ public class Classifier {
 
     private void checkInitialization() {
         if (!initialized)
-            throw new RuntimeException("Classifier used before initialization");
+            throw new RuntimeException("XCSClassifier used before initialization");
     }
 
-    public Condition getCondition() {
+    public XCSCondition getCondition() {
         checkInitialization();
         return condition;
     }
 
-    public void setCondition(Condition condition) {
+    public void setCondition(XCSCondition condition) {
         checkInitialization();
         this.condition = condition;
     }
@@ -181,8 +182,8 @@ public class Classifier {
         return this.condition.matches(sigma);
     }
 
-    public static Classifier coverSituation(@NotNull Situation sigma, Action action, double P_hash) {
-        return new Classifier(Condition.createCovering(sigma, P_hash), action);
+    public static XCSClassifier coverSituation(@NotNull Situation sigma, Action action, double P_hash) {
+        return new XCSClassifier(XCSCondition.createCovering(sigma, P_hash), action);
     }
 
     public void initialize(double p_I, double e_I, double F_I, long t) {
@@ -197,8 +198,8 @@ public class Classifier {
     }
 
     @NotNull
-    public static Classifier copy(@NotNull Classifier original) {
-       Classifier copy = new Classifier(Condition.copy(original.getCondition()), Action.copy(original.getAction()));
+    public static XCSClassifier copy(@NotNull XCSClassifier original) {
+       XCSClassifier copy = new XCSClassifier(XCSCondition.copy(original.getCondition()), Action.copy(original.getAction()));
        copy.initialize(
                original.getP(),
                original.getE(),
@@ -211,7 +212,7 @@ public class Classifier {
        return copy;
     }
 
-    public static void applyCrossover(@NotNull Classifier child1, @NotNull Classifier child2) {
+    public static void applyCrossover(@NotNull XCSClassifier child1, @NotNull XCSClassifier child2) {
         double x = ThreadLocalRandom.current().nextDouble() * (child1.getCondition().getValues().length + 1);
         double y = ThreadLocalRandom.current().nextDouble() * (child1.getCondition().getValues().length + 1);
         if(x > y) {
@@ -256,10 +257,10 @@ public class Classifier {
         } while(i < condition.getValues().length);
     }
 
-    public boolean isSame(@NotNull Classifier cl) {
+    public boolean isSame(@NotNull XCSClassifier cl) {
         return cl.condition.equals(condition) && cl.action.equals(action);
     }
-    public static boolean couldSubsume(@NotNull Classifier cl, double theta_sub, double epsilon_nought) {
+    public static boolean couldSubsume(@NotNull XCSClassifier cl, double theta_sub, double epsilon_nought) {
         if(cl.getExp() > theta_sub) {
             if(cl.getE() < epsilon_nought) {
                 return true;
@@ -268,7 +269,7 @@ public class Classifier {
         return false;
     }
 
-    public static boolean isMoreGeneral(@NotNull Classifier general, @NotNull Classifier specific) {
+    public static boolean isMoreGeneral(@NotNull XCSClassifier general, @NotNull XCSClassifier specific) {
         if(general.getCondition().hashCount() <= specific.getCondition().hashCount()) return false;
         int i = 0;
         TernaryAlphabet[] generalValues = general.getCondition().getValues();
@@ -283,10 +284,10 @@ public class Classifier {
         return true;
     }
 
-    public static boolean doesSubsume(@NotNull Classifier sub, @NotNull Classifier tos, double theta_sub, double epsilon_nought) {
+    public static boolean doesSubsume(@NotNull XCSClassifier sub, @NotNull XCSClassifier tos, double theta_sub, double epsilon_nought) {
         if(sub.getAction().equals(tos.getAction()))
-            if(Classifier.couldSubsume(sub, theta_sub, epsilon_nought))
-                if(Classifier.isMoreGeneral(sub, tos))
+            if(XCSClassifier.couldSubsume(sub, theta_sub, epsilon_nought))
+                if(XCSClassifier.isMoreGeneral(sub, tos))
                     return true;
         return false;
     }
@@ -296,7 +297,7 @@ public class Classifier {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
 
-        Classifier that = (Classifier) o;
+        XCSClassifier that = (XCSClassifier) o;
 
         if (Double.compare(that.p, p) != 0) return false;
         if (Double.compare(that.e, e) != 0) return false;

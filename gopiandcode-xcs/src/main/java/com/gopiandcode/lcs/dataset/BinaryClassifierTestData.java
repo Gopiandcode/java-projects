@@ -1,6 +1,6 @@
 package com.gopiandcode.lcs.dataset;
 
-import com.gopiandcode.lcs.internal.Action;
+import com.gopiandcode.lcs.problem.Action;
 import com.gopiandcode.lcs.problem.Situation;
 
 public class BinaryClassifierTestData {

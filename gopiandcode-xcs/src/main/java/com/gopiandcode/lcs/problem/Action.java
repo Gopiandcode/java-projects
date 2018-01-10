@@ -1,6 +1,5 @@
-package com.gopiandcode.lcs.internal;
+package com.gopiandcode.lcs.problem;
 
-import com.gopiandcode.lcs.problem.BinaryAlphabet;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 

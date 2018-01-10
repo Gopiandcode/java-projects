@@ -1,47 +1,49 @@
-package com.gopiandcode.lcs.xcs;
+package com.gopiandcode.lcs.rcs;
 
 import com.gopiandcode.lcs.problem.Action;
-import org.jetbrains.annotations.NotNull;
 
 import java.util.*;
 import java.util.concurrent.ThreadLocalRandom;
 
-public class XCSPredictionArray {
-    @NotNull
+public class RCSPredictionArray {
     @Override
     public String toString() {
-        return "XCSPredictionArray{" +
-     predictionArray +
-                '}';
+        return "RCSPredictionArray{" +
+                predictionArray +
+               '}';
     }
 
     private final Map<Action, Double> predictionArray;
 
-    XCSPredictionArray(Map<Action, Double> predictionArray) {
-        this.predictionArray = predictionArray;
-    }
-
-
-    public double findMax() {
+     public double findMax() {
         return predictionArray.values().stream().max(Double::compare).orElse(0.0);
     }
 
-    public static XCSPredictionArray generatePredictionArray(@NotNull List<XCSClassifier> M) {
-        Map<Action, Double> pa = new LinkedHashMap<>();
+
+    public RCSPredictionArray(Map<Action, Double> pa) {
+
+        this.predictionArray = pa;
+    }
+
+    public static RCSPredictionArray generatePredictionArray(List<RCSClassifierOutput> m) {
+         Map<Action, Double> pa = new LinkedHashMap<>();
         Map<Action, Double> fsa = new HashMap<>();
-        for (XCSClassifier cl : M) {
+        for (RCSClassifierOutput output : m) {
+            RCSClassifier cl = output.GetFinalClassifier();
             //  pa[cl.a] <- pa[cl.a] + cl.p * cl.f
-            pa.put(cl.getAction(),
+            Action outputAction = cl.getOutput().left();
+            pa.put(
+                    outputAction,
                     // pa[cl.a]
-                    pa.getOrDefault(cl.getAction(), 0.0) +
-                            // cl.p * cl.f
+                    pa.getOrDefault(outputAction, 0.0) +
+                    // cl.p * cl.f
                             cl.getP() * cl.getF());
             // fsa[cl.a] = fsa[cl.a] + cl.f
-            fsa.put(cl.getAction(),
+            fsa.put(outputAction,
                     // fsa[cl.a]
-                    fsa.getOrDefault(cl.getAction(), 0.0) +
-                            // cl.f
-                            cl.getF());
+                    fsa.getOrDefault(outputAction, 0.0) +
+                    // cl.f
+                    cl.getF());
         }
 
         for (Action a : fsa.keySet()) {
@@ -49,10 +51,11 @@ public class XCSPredictionArray {
             if(fsa.get(a) != 0)
                 pa.put(a, pa.get(a) / fsa.get(a));
         }
-        return new XCSPredictionArray(pa);
+        return new RCSPredictionArray(pa);
+
     }
 
-    public Action selectRandomAction() {
+     public Action selectRandomAction() {
         List<Action> actions = new ArrayList<>(predictionArray.keySet());
         int size = predictionArray.keySet().size();
         return actions.get(ThreadLocalRandom.current().nextInt(0, size));
@@ -69,4 +72,5 @@ public class XCSPredictionArray {
         }
         return bestSeen.orElse(Action.createRandom());
     }
+
 }

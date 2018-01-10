@@ -1,4 +1,4 @@
-package com.gopiandcode.lcs.internal;
+package com.gopiandcode.lcs.xcs;
 
 import com.gopiandcode.lcs.problem.BinaryAlphabet;
 import com.gopiandcode.lcs.problem.Situation;
@@ -10,7 +10,7 @@ import java.util.Arrays;
 
 import static java.util.concurrent.ThreadLocalRandom.current;
 
-public class Condition {
+public class XCSCondition {
     private final TernaryAlphabet[] values;
 
     public TernaryAlphabet[] getValues() {
@@ -24,16 +24,16 @@ public class Condition {
         for (TernaryAlphabet value : values) {
            sb.append(value.toString());
         }
-        return "Condition(" +
+        return "XCSCondition(" +
                 sb.toString() +
                 ')';
     }
 
-    Condition(TernaryAlphabet[] values) {
+    XCSCondition(TernaryAlphabet[] values) {
         this.values = values;
     }
 
-    Condition(@NotNull String representation) {
+    XCSCondition(@NotNull String representation) {
         values = new TernaryAlphabet[representation.length()];
         for (int i = 0; i < representation.length(); i++) {
             switch (representation.charAt(i)) {
@@ -55,7 +55,7 @@ public class Condition {
     public boolean matches(@NotNull Situation situation) {
         BinaryAlphabet[] situationValues = situation.getValues();
         if (situationValues.length != this.values.length) {
-            throw new RuntimeException("Situation does not match the size of the Condition");
+            throw new RuntimeException("Situation does not match the size of the XCSCondition");
         }
         for (int i = 0; i < situationValues.length; i++) {
             TernaryAlphabet value = this.values[i];
@@ -78,7 +78,7 @@ public class Condition {
         return Arrays.stream(values).filter(ternaryAlphabet -> ternaryAlphabet == TernaryAlphabet.HASH).map(ternaryAlphabet -> 1).reduce(Integer::sum).orElse(0);
     }
 
-    public static Condition createRandom(int size) {
+    public static XCSCondition createRandom(int size) {
         TernaryAlphabet[] ternaryAlphabets = new TernaryAlphabet[size];
         for (int i = 0; i < size; i++) {
 
@@ -94,14 +94,14 @@ public class Condition {
                     value = TernaryAlphabet.HASH;
                     break;
                 default:
-                    throw new RuntimeException("Unknown random value recieved in creating Condition");
+                    throw new RuntimeException("Unknown random value recieved in creating XCSCondition");
             }
             ternaryAlphabets[i] = value;
         }
-        return new Condition(ternaryAlphabets);
+        return new XCSCondition(ternaryAlphabets);
     }
 
-    public static Condition createRandom(int size, double P_hash) {
+    public static XCSCondition createRandom(int size, double P_hash) {
         TernaryAlphabet[] ternaryAlphabets = new TernaryAlphabet[size];
         for (int i = 0; i < size; i++) {
 
@@ -115,15 +115,15 @@ public class Condition {
                         value = TernaryAlphabet.ONE;
                         break;
                     default:
-                        throw new RuntimeException("Unknown random value recieved in creating Condition");
+                        throw new RuntimeException("Unknown random value recieved in creating XCSCondition");
                 }
             }
             ternaryAlphabets[i] = value;
         }
-        return new Condition(ternaryAlphabets);
+        return new XCSCondition(ternaryAlphabets);
     }
 
-    public static Condition createCovering(@NotNull Situation sigma, double p_hash) {
+    public static XCSCondition createCovering(@NotNull Situation sigma, double p_hash) {
         BinaryAlphabet[] sigmaValues = sigma.getValues();
         TernaryAlphabet[] values = new TernaryAlphabet[sigmaValues.length];
 
@@ -143,11 +143,11 @@ public class Condition {
                 }
             }
         }
-        return new Condition(values);
+        return new XCSCondition(values);
     }
 
-    public static Condition copy(@NotNull Condition condition) {
-       return new Condition(Arrays.copyOf(condition.getValues(), condition.getValues().length));
+    public static XCSCondition copy(@NotNull XCSCondition condition) {
+       return new XCSCondition(Arrays.copyOf(condition.getValues(), condition.getValues().length));
     }
 
     @Override
@@ -155,7 +155,7 @@ public class Condition {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
 
-        Condition condition = (Condition) o;
+        XCSCondition condition = (XCSCondition) o;
 
         // Probably incorrect - comparing Object[] arrays with Arrays.equals
         if(values.length != condition.values.length)

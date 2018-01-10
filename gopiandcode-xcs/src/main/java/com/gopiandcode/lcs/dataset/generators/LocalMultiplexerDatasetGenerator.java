@@ -57,7 +57,7 @@ public class LocalMultiplexerDatasetGenerator {
     }
 
     public static void main(String[] args) throws FileNotFoundException {
-        LocalMultiplexerDatasetGenerator gen = new LocalMultiplexerDatasetGenerator(100, 4, "testData20.txt");
+        LocalMultiplexerDatasetGenerator gen = new LocalMultiplexerDatasetGenerator(10000, 2, "testData6.txt");
         gen.generateDataset();
     }
 }
