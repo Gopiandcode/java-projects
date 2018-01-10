@@ -1,4 +1,4 @@
-# RCS Learning Classifier Systme Java Implementation
+# RCS Learning Classifier System Java Implementation
 Reference: me.
 
 This is an implementation of an algorithm I'm working on. It's a modification of a standard XCS, which is also present in this repo.
