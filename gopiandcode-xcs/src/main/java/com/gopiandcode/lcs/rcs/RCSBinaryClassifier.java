@@ -211,6 +211,11 @@ public class RCSBinaryClassifier implements BinaryClassifier {
      */
     private int intermediateSituationSize = 25;
 
+    public RCSBinaryClassifier(int life, int intermediateSituationSize) {
+        this.life = life;
+        this.intermediateSituationSize = intermediateSituationSize;
+    }
+
     private List<RCSClassifierOutput> M = new ArrayList<>();
     private List<RCSClassifierOutput> A = new ArrayList<>();
     private List<RCSClassifier> P = new ArrayList<>();
@@ -589,5 +594,201 @@ public class RCSBinaryClassifier implements BinaryClassifier {
         this.generateMatchingOutSet(sigma);
         RCSPredictionArray PA = RCSPredictionArray.generatePredictionArray(this.M);
         return this.selectActionUsing(PA);
+    }
+
+    public Double getPopulationSize() {
+        return this.P.stream().map(RCSClassifier::getN).reduce(Double::sum).orElse(0.0);
+    }
+
+    public double getOutputClassifierCount() {
+        return this.P.stream().filter(classifier -> classifier.getOutput().isLeft()).map(RCSClassifier::getN).reduce(Double::sum).orElse(0.0);
+    }
+
+    public double getIntermediateClassifierCount() {
+        return this.P.stream().filter(classifier -> !classifier.getOutput().isLeft()).map(RCSClassifier::getN).reduce(Double::sum).orElse(0.0);
+    }
+
+    public long getN() {
+        return N;
+    }
+
+    public void setN(long n) {
+        N = n;
+    }
+
+    public double getBeta() {
+        return beta;
+    }
+
+    public void setBeta(double beta) {
+        this.beta = beta;
+    }
+
+    public double getAlpha() {
+        return alpha;
+    }
+
+    public void setAlpha(double alpha) {
+        this.alpha = alpha;
+    }
+
+    public double getEpsilon_nought() {
+        return epsilon_nought;
+    }
+
+    public void setEpsilon_nought(double epsilon_nought) {
+        this.epsilon_nought = epsilon_nought;
+    }
+
+    public double getV() {
+        return v;
+    }
+
+    public void setV(double v) {
+        this.v = v;
+    }
+
+    public double getGamma() {
+        return gamma;
+    }
+
+    public void setGamma(double gamma) {
+        this.gamma = gamma;
+    }
+
+    public double getTheta_GA() {
+        return theta_GA;
+    }
+
+    public void setTheta_GA(double theta_GA) {
+        this.theta_GA = theta_GA;
+    }
+
+    public double getX() {
+        return x;
+    }
+
+    public void setX(double x) {
+        this.x = x;
+    }
+
+    public double getMew() {
+        return mew;
+    }
+
+    public void setMew(double mew) {
+        this.mew = mew;
+    }
+
+    public double getTheta_del() {
+        return theta_del;
+    }
+
+    public void setTheta_del(double theta_del) {
+        this.theta_del = theta_del;
+    }
+
+    public double getDelta() {
+        return delta;
+    }
+
+    public void setDelta(double delta) {
+        this.delta = delta;
+    }
+
+    public double getTheta_sub() {
+        return theta_sub;
+    }
+
+    public void setTheta_sub(double theta_sub) {
+        this.theta_sub = theta_sub;
+    }
+
+    public double getP_sharp() {
+        return P_sharp;
+    }
+
+    public void setP_sharp(double p_sharp) {
+        P_sharp = p_sharp;
+    }
+
+    public double getP_I() {
+        return p_I;
+    }
+
+    public void setP_I(double p_I) {
+        this.p_I = p_I;
+    }
+
+    public double getE_I() {
+        return e_I;
+    }
+
+    public void setE_I(double e_I) {
+        this.e_I = e_I;
+    }
+
+    public double getF_I() {
+        return F_I;
+    }
+
+    public void setF_I(double f_I) {
+        F_I = f_I;
+    }
+
+    public double getP_explr() {
+        return p_explr;
+    }
+
+    public void setP_explr(double p_explr) {
+        this.p_explr = p_explr;
+    }
+
+    public double getTheta_mna() {
+        return theta_mna;
+    }
+
+    public void setTheta_mna(double theta_mna) {
+        this.theta_mna = theta_mna;
+    }
+
+    public int getLife() {
+        return life;
+    }
+
+    public void setLife(int life) {
+        this.life = life;
+    }
+
+    public int getIntermediateSituationSize() {
+        return intermediateSituationSize;
+    }
+
+    public void setIntermediateSituationSize(int intermediateSituationSize) {
+        this.intermediateSituationSize = intermediateSituationSize;
+    }
+
+    public long getT() {
+        return t;
+    }
+
+    public void setT(long t) {
+        this.t = t;
+    }
+
+    public double getRewardForCorrectClassification() {
+        return rewardForCorrectClassification;
+    }
+
+    public void setRewardForCorrectClassification(double rewardForCorrectClassification) {
+        this.rewardForCorrectClassification = rewardForCorrectClassification;
+    }
+
+    public double getRewardForIncorrectClassification() {
+        return rewardForIncorrectClassification;
+    }
+
+    public void setRewardForIncorrectClassification(double rewardForIncorrectClassification) {
+        this.rewardForIncorrectClassification = rewardForIncorrectClassification;
     }
 }

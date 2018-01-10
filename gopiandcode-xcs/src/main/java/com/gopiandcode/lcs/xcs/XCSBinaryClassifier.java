@@ -730,7 +730,7 @@ public class XCSBinaryClassifier implements BinaryClassifier {
 //
 //                System.out.println("[" + iterationCount + "]: Average of last " + n + ": " + xbar + ", sd: " + sd);
 //
-//                logger.recordAccuracyAtIteration(xbar, iterationCount);
+//                logger.recordValueAtIteration(xbar, iterationCount);
 //
 //                lastNScores.clear();
 //            }
