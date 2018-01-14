@@ -791,4 +791,8 @@ public class RCSBinaryClassifier implements BinaryClassifier {
     public void setRewardForIncorrectClassification(double rewardForIncorrectClassification) {
         this.rewardForIncorrectClassification = rewardForIncorrectClassification;
     }
+
+    public List<RCSClassifier> getPopulation() {
+        return this.P;
+    }
 }

@@ -11,6 +11,7 @@ import sun.rmi.runtime.Log;
 
 import java.awt.*;
 import java.io.FileNotFoundException;
+import java.io.IOException;
 
 
 public class Main {
@@ -45,9 +46,10 @@ public class Main {
 
         System.out.println("Final Accuracy: " + runner.runTestIterations(1000));
         GraphRenderer renderer = new GraphRenderer(logger, 1280, 720,20);
-        renderer.save("result6_rcs_4.png");
+        renderer.save("result6_rcs_5.png");
 
-
+            new RCSGraphGenerator(xcs).writeToPNG("./result_graph.png");
+        System.out.println("Finished");
 
 
     }
