@@ -51,7 +51,7 @@ class DataPoint {
         rectMode(CENTER);
         
         fill(velocity.mag() * 10, map(radius, 0, 10, 0, 256), map(mass, 0, 10, 0, 256), 55);
-        ellipse(position.x, position.y, radius, radius);
+        ellipse(position.x, position.y, radius*2, radius*2);
         fill(mass);
         text(this.string, position.x + radius, position.y);
     }
