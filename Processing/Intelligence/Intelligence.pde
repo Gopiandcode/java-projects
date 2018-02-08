@@ -7,14 +7,15 @@ import java.lang.Iterable;
 WordSource source;
 
 
+// we are trying to incorporate the following mapping
+
 
 void setup() {
   size(1280, 720);
   background(255);
   try {
-
-    source = new WordSource(new Scanner(createInput("corpus.txt")));
-  } 
+      source = new WordSource(new Scanner(createInput("corpus.txt")));
+      } 
   catch (Exception e) {
     println(e);
   }
