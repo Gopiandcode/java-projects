@@ -15,10 +15,18 @@ public class RCSClassifier {
 
     @Override
     public String toString() {
-        return "{" +
-                condition +
-               " -> " + output +
-               '}';
+        StringBuilder sb = new StringBuilder();
+        sb.append(condition);
+        if(output.isRight()) {
+            sb.append(" -> ");
+            sb.append(output.right().toString());
+        } else {
+            sb.append(": (");
+            sb.append(output.left().toString());
+            sb.append(")");
+
+        }
+        return sb.toString();
     }
 
     /**

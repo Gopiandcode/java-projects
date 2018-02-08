@@ -2,63 +2,61 @@ package com.gopiandcode.lcs;
 
 import com.gopiandcode.lcs.dataset.BinaryClassifierDataset;
 import com.gopiandcode.lcs.dataset.LocalBinaryClassifierDataset;
-import com.gopiandcode.lcs.graphing.*;
-import com.gopiandcode.lcs.problem.BinaryClassifier;
+import com.gopiandcode.lcs.logging.RCSClassifierTrainingLogger;
+import com.gopiandcode.lcs.logging.csv.CSVRCSTrainingLogger;
+import com.gopiandcode.lcs.logging.csv.CSVTrainingLogger;
+import com.gopiandcode.lcs.logging.graphing.*;
 import com.gopiandcode.lcs.rcs.RCSBinaryClassifier;
 import com.gopiandcode.lcs.xcs.XCSBinaryClassifier;
 import org.jfree.chart.axis.NumberAxis;
-import sun.rmi.runtime.Log;
 
 import java.awt.*;
 import java.io.FileNotFoundException;
-import java.io.IOException;
 
 
 public class Main {
-    public static void main(String[] args) throws FileNotFoundException {
-       RCSBinaryClassifier xcs = new RCSBinaryClassifier(10, 10);
-
+    static void configureGraphParams(int iterationCount) {
         NumberAxis axis = new NumberAxis();
-      GraphingLogger logger = new MultiGraphingLogger("RCSBinaryClassifier Accuracy over Training Iterations", LoggableDataType.ACCURACY, LoggableDataType.INTERMEDIATE_CLASSIFIER_COUNT, LoggableDataType.OUTPUT_CLASSIFIER_COUNT, LoggableDataType.POPULATION_SIZE);
-//        setXCSParameters(xcs);
+        axis.setRange(0, iterationCount);
+        LoggableDataType.ACCURACY.setRangeAxis(axis);
+    }
+
+    static void configureXCSParamters(RCSBinaryClassifier rcs) {
+       rcs.setP_explr(0.01);
+//       rcs.setRewardForCorrectClassification(100);
+        rcs.setMew(0.05);
+        rcs.setN(100);
+//        rcs.setTheta_mna(1.0);
+        rcs.setX(0.1);
+    }
+    public static void main(String[] args) throws FileNotFoundException {
+        RCSBinaryClassifier rcs = new RCSBinaryClassifier(3, 8);
+        configureXCSParamters(rcs);
+
+        GraphingLogger testlogger = new AccuracyGraphingLogger("XCS Test Accuracy");
+//        CSVRCSTrainingLogger testlogger = new CSVRCSTrainingLogger("rcsBasicData20.csv");
+        GraphingLogger logger = new AccuracyGraphingLogger("final constrained XCS Train Accuracy");
+
+
         BinaryClassifierDataset testDataset = LocalBinaryClassifierDataset.loadFromFile("testData6.txt");
         BinaryClassifierDataset trainDataset = LocalBinaryClassifierDataset.loadFromFile("trainData6.txt");
+        RCSBinaryClassifierTestRunner runner = new RCSBinaryClassifierTestRunner(trainDataset, testDataset, rcs);
 
-        BinaryClassifierTestRunner runner = new RCSBinaryClassifierTestRunner(trainDataset, testDataset, xcs);
+        runner.setLogger(new ClassifierTrainingLoggerAdapter(logger), 1000);
+//        runner.setTestLogger(testlogger, 1000, 100);
+        runner.setTestLogger(new ClassifierTrainingLoggerAdapter(testlogger), 10000, 1000);
 
-        runner.setLogger(logger, 100);
+
         runner.setShouldReset(true);
-
-//        runner.runTrainIterations(50000);
-        runner.runTrainIterations(5000);
-
-
-        axis.setLabel("No of Population");
-        axis.setRange(0, xcs.getPopulationSize());
-        LoggableDataType.INTERMEDIATE_CLASSIFIER_COUNT.setRangeAxis(axis);
-        LoggableDataType.INTERMEDIATE_CLASSIFIER_COUNT.setSeriesPaint(Color.GREEN);
-        LoggableDataType.OUTPUT_CLASSIFIER_COUNT.setRangeAxis(axis);
-        LoggableDataType.OUTPUT_CLASSIFIER_COUNT.setSeriesPaint(Color.YELLOW);
-        LoggableDataType.POPULATION_SIZE.setRangeAxis(axis);
-        LoggableDataType.POPULATION_SIZE.setSeriesPaint(Color.BLUE);
-
+        configureGraphParams(100000);
+        runner.runTrainIterations(100000);
 
 
         System.out.println("Final Accuracy: " + runner.runTestIterations(1000));
-        GraphRenderer renderer = new GraphRenderer(logger, 1280, 720,20);
-        renderer.save("result6_rcs_5.png");
+        new GraphRenderer(logger, 1080, 720, 1720);
+        new GraphRenderer(testlogger, 1080, 720, 1720);
 
-            new RCSGraphGenerator(xcs).writeToPNG("./result_graph.png");
-        System.out.println("Finished");
-
-
+//        testlogger.close();
     }
 
-    private static void setXCSParameters(XCSBinaryClassifier xcs) {
-//        xcs.setMew(0.001);
-//        xcs.setTheta_GA(10000);
-//        xcs.setN(20000);
-        xcs.setDoGASubsumption(false);
-        xcs.setDoActionSetSubsumption(false);
-    }
 }

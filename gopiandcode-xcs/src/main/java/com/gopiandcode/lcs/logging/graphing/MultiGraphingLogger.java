@@ -1,10 +1,8 @@
-package com.gopiandcode.lcs.graphing;
+package com.gopiandcode.lcs.logging.graphing;
 
-import com.google.common.collect.Lists;
 import org.jfree.chart.JFreeChart;
 import org.jfree.chart.axis.NumberAxis;
 import org.jfree.chart.axis.NumberTickUnit;
-import org.jfree.chart.axis.ValueAxis;
 import org.jfree.chart.plot.XYPlot;
 import org.jfree.chart.renderer.xy.XYSplineRenderer;
 import org.jfree.data.xy.XYSeries;

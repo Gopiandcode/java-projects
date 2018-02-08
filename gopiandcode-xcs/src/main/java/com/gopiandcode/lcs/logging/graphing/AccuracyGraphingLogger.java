@@ -1,4 +1,4 @@
-package com.gopiandcode.lcs.graphing;
+package com.gopiandcode.lcs.logging.graphing;
 
 import org.jfree.chart.JFreeChart;
 import org.jfree.chart.axis.NumberAxis;
