@@ -12,6 +12,7 @@ class EditableNode implements NodeSelector {
       if (selectedNode != null && editedNode != selectedNode) {
         editedNode = selectedNode;
         builder = new StringBuilder();
+        builder.append(editedNode.getName());
       } 
   }
   
@@ -36,6 +37,6 @@ class EditableNode implements NodeSelector {
     stroke(active ? 0 : 100);
             noFill();
     rect(width - 5 - (5 + 30) * offset, height - 35, 30, 30);
-    text("E", width - 5 - (5 + 30) * offset + 5, height - 25);
+    text("E", width - 5 - (5 + 30) * offset + 10, height - 15);
   }
 }

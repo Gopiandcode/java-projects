@@ -6,6 +6,7 @@ class Nodes implements NodeSelector {
   }
 
   void addNode(Node node) {
+    node.setParentGroup(this);
     nodes.add(node);
   }
 
@@ -21,7 +22,7 @@ class Nodes implements NodeSelector {
   
   void onMousePressed() {
      if(getNodeAt(mouseX, mouseY) == null) {
-       addNode(new Node(mouseX, mouseY)); 
+       addNode(new Node(mouseX, mouseY, this)); 
      }
   }
 

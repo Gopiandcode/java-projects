@@ -3,13 +3,22 @@ class Node {
   PVector position;
   PVector velocity;
   PVector acceleration;
+  Nodes parentGroup;
   String name = "";
 
-  Node(int x, int y) {
+  void setParentGroup(Nodes nodes) {
+    this.parentGroup = nodes;
+  }
+
+  Node(int x, int y, Nodes parentGroup) {
     position = new PVector(x, y);
     velocity = new PVector();
     acceleration = new PVector();
+    this.parentGroup = parentGroup;
   }
+ String getName() {
+   return name;
+ }
 
   void setName(String name) {
     this.name = name;
