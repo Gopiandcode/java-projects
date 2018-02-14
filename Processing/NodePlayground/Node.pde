@@ -9,6 +9,10 @@ class Node {
   void setParentGroup(Nodes nodes) {
     this.parentGroup = nodes;
   }
+  
+  void acceptData(Data data) {
+    println("Node " + name + " recieved " + data.value);
+  }
 
   Node(int x, int y, Nodes parentGroup) {
     position = new PVector(x, y);
