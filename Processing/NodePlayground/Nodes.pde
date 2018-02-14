@@ -1,8 +1,11 @@
 class Nodes implements NodeSelector {
   ArrayList<Node> nodes;
-
+  ArrayList<Edge> edges;
+  
+  
   Nodes() {
     nodes = new ArrayList<Node>();
+    edges = new ArrayList<Edge>();
   }
 
   void addNode(Node node) {
@@ -27,14 +30,23 @@ class Nodes implements NodeSelector {
   }
 
   void draw() {
+    
+    for(Edge edge : edges) {
+     edge.draw(); 
+    }
     for (Node node : nodes) {
       node.draw();
     }
+    
   }
 
   void update() {
     for (Node node : nodes) {
       node.update();
+    }
+    
+    for(Edge edge : edges) {
+     edge.update(); 
     }
   }
   
