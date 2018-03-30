@@ -39,8 +39,6 @@ class Plotter {
     fill(0);
     strokeWeight(1.0);
     stroke(0);
-          strokeWeight(1.0);
-      stroke(0);
     line(plot_x, plot_y, plot_x + plot_width, plot_y);
     line(plot_x + plot_width, plot_y, plot_x + plot_width, plot_y + plot_height);
     line(plot_x, plot_y + plot_height, plot_x + plot_width, plot_y + plot_height);
@@ -114,10 +112,15 @@ class Plotter {
     line(p1.x, p1.y, p2.x, p2.y);
   }
 
+  private boolean checkBounds(float x, float y) {
+    return x > plot_x && x < plot_x + plot_width && y > plot_y && y < plot_y + plot_height;
+  }
   void drawPoint(float x, float y) {
         PVector p1 = toScreenSpace(x, y);
+       if(checkBounds(p1.x, p1.y)) {
     rectMode(CORNERS);
     point(p1.x, p1.y);
+       }
   }
 
   void drawRectangle(float x1, float y1, float x2, float y2) {
