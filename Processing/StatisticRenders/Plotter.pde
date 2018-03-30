@@ -1,16 +1,17 @@
 
 Plotter plotCenteredAt(float plot_x, float plot_y, float plot_width, float plot_height) {
-  return new Plotter(plot_x - plot_width/2,  plot_y - plot_height/2, plot_width, plot_height);
+  return new Plotter(plot_x - plot_width/2, plot_y - plot_height/2, plot_width, plot_height);
 }
 
 class Plotter {
-  static final float X_MIN = -10,
-                      Y_MIN = -10,
-                      X_MAX = 10,
-                      Y_MAX = 10;
+  static final float X_MIN = -10, 
+    Y_MIN = -10, 
+    X_MAX = 10, 
+    Y_MAX = 10;
   static final int X_TICK_COUNT = 10;
-  static final int Y_TICK_COUNT = 10;      
-                
+  static final int Y_TICK_COUNT = 10; 
+  static final boolean DRAW_GRIDLINES = true;
+
   float plot_x;
   float plot_y;
   float plot_width;
@@ -32,59 +33,105 @@ class Plotter {
     drawAxis();
     drawAxisTicks();
   }
-  
+
   void drawBorder() {
     rectMode(CENTER);
     fill(0);
+    strokeWeight(1.0);
+    stroke(0);
+          strokeWeight(1.0);
+      stroke(0);
     line(plot_x, plot_y, plot_x + plot_width, plot_y);
     line(plot_x + plot_width, plot_y, plot_x + plot_width, plot_y + plot_height);
     line(plot_x, plot_y + plot_height, plot_x + plot_width, plot_y + plot_height);
-    line(plot_x , plot_y, plot_x, plot_y + plot_height);
-
+    line(plot_x, plot_y, plot_x, plot_y + plot_height);
   }
-  
+
   void drawAxis() {
     //
     //line(plot_x + plot_width/2, plot_y, plot_x + plot_width/2, plot_y + plot_height);
     //line(plot_x , plot_y + plot_height, plot_x + plot_width, plot_y + plot_height/2);
-
   }
-  
+
   void drawAxisTicks() {
-    
+
     rectMode(CENTER);
     fill(0);
     float screen_delta_ratio = plot_width / X_TICK_COUNT;
     float value_delta_ratio = (X_MAX - X_MIN) / X_TICK_COUNT;
-    for(int i = 0; i < X_TICK_COUNT; i++) {
+    for (int i = 1; i < X_TICK_COUNT; i++) {
+
       float value = i * value_delta_ratio + X_MIN;
       float position = screen_delta_ratio * i + plot_x;
-      line(position, plot_y + plot_height ,position, plot_y + plot_height + 5);
+
+      if (DRAW_GRIDLINES) {
+        strokeWeight(0.5);
+        stroke(200);
+        line(position, plot_y, position, plot_y + plot_height);
+      }
+
+
+      strokeWeight(1.0);
+      stroke(0);
+      line(position, plot_y + plot_height, position, plot_y + plot_height + 5);
+      String label = "" + value;
+      text(label, position - textWidth(label)/2, plot_y + plot_height + 20);
+
+      strokeWeight(0.5);
+      stroke(200);
     }
-    
+
     screen_delta_ratio = plot_height / Y_TICK_COUNT;
     value_delta_ratio = (Y_MAX - Y_MIN) / Y_TICK_COUNT;
-    for(int i = 0; i < Y_TICK_COUNT; i++) {
+    for (int i = 1; i < Y_TICK_COUNT; i++) {
+
       float value = Y_MAX -  i * value_delta_ratio;
       float position = screen_delta_ratio * i + plot_y;
+      if (DRAW_GRIDLINES) {
+        strokeWeight(0.5);
+        stroke(200);
+        line(plot_x, position, plot_x + plot_width, position);
+      }
+      strokeWeight(1.0);
+      stroke(0);
       line(plot_x, position, plot_x - 5, position);
-      
+      String label = "" + value;
+      text(label, plot_x - 5 - textWidth(label) * 1.5, position);
     }
-    
   }
-  
-  void drawLine(float x, float y) {
+
+  private PVector toScreenSpace(float x, float y) {
+    float screen_x = plot_x + ((max(min(x, X_MAX), X_MIN) - X_MIN) / (X_MAX - X_MIN)) * (plot_width);
+    float screen_y = plot_y + plot_height - ((max(min(y, Y_MAX), Y_MIN) - Y_MIN) / (Y_MAX - Y_MIN)) * (plot_height);
+
+    return new PVector(screen_x, screen_y);
   }
-  
+
+  void drawLine(float x1, float y1, float x2, float y2) {
+    PVector p1 = toScreenSpace(x1, y1);
+    PVector p2 = toScreenSpace(x2, y2);
+    rectMode(CORNERS);
+    line(p1.x, p1.y, p2.x, p2.y);
+  }
+
   void drawPoint(float x, float y) {
-    
+        PVector p1 = toScreenSpace(x, y);
+    rectMode(CORNERS);
+    point(p1.x, p1.y);
+  }
+
+  void drawRectangle(float x1, float y1, float x2, float y2) {
+        PVector p1 = toScreenSpace(x1, y1);
+    PVector p2 = toScreenSpace(x2, y2);
+    rectMode(CORNERS);
+    rect(p1.x, p1.y, p2.x, p2.y);
+  }
+
+  void drawEllipse(float x1, float y1, float x2, float y2) {
+            PVector p1 = toScreenSpace(x1, y1);
+    PVector p2 = toScreenSpace(x2, y2);
+    rectMode(CORNERS);
+    ellipse(p1.x, p1.y, p2.x, p2.y);
   }
   
-  void drawRectangle(float x, float y) {
-    
-  }
-  
-  void drawCircle(float x, float y, float w, float h) {
-    
-  }
 }
