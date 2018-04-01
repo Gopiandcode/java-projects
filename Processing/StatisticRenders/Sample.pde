@@ -55,8 +55,8 @@ class Sample {
     gaussianX.clear();
     gaussianY.clear();
     for (int i = 0; i < SIZE; i++) {
-      gaussianX.add(randomGaussian() * 10); 
-      gaussianY.add(randomGaussian() * 10);
+      gaussianX.add(randomGaussian() * 5); 
+      gaussianY.add(randomGaussian() * 5);
     }
     calculateStatistics();
   }
@@ -66,6 +66,9 @@ class Sample {
       strokeWeight(0.5);
     plot.drawLine(mux, plot.Y_MIN, mux, plot.Y_MAX);
     plot.drawLine(plot.X_MIN, muy, plot.X_MAX, muy);
+          stroke(0, 0, 200);
+      strokeWeight(1.5);
+    plot.drawLine(plot.X_MIN, ahat + bhat * plot.X_MIN, plot.X_MAX, ahat + bhat * plot.X_MAX);
     strokeWeight(10);
     for (int i = 0; i < SIZE; i++) {
       float x = gaussianX.get(i);
