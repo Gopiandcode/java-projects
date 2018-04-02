@@ -1,5 +1,5 @@
-class Sample {
-  static final int SIZE = 100;
+class Sample implements PositionEventHandler {
+  int SIZE = 100;
   ArrayList<Float> gaussianX = new ArrayList<Float>();
   ArrayList<Float> gaussianY = new ArrayList<Float>();
   float sx;
@@ -15,7 +15,23 @@ class Sample {
   float bhat;
   float ahat;
 
+  void emptyEntries() {
+   SIZE = 0;
+   gaussianX.clear();
+   gaussianY.clear();
+  }
+  
+   
+ void onPositionEvent(PVector position) {
+   SIZE++;
+   gaussianX.add(position.x);
+   gaussianY.add(position.y);
+   calculateStatistics();
+ }
+
   void calculateStatistics() {
+    if(SIZE < 0)
+      return;
     sx = 0;
     sy = 0;
     for (int i = 0; i < SIZE; i++) {
@@ -55,8 +71,8 @@ class Sample {
     gaussianX.clear();
     gaussianY.clear();
     for (int i = 0; i < SIZE; i++) {
-      gaussianX.add(randomGaussian() * 5); 
-      gaussianY.add(randomGaussian() * 5);
+      gaussianX.add(randomGaussian() / 1.1); 
+      gaussianY.add(randomGaussian() / 1.1);
     }
     calculateStatistics();
   }

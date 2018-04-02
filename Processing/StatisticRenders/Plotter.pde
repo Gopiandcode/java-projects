@@ -11,6 +11,7 @@ class Plotter {
   static final int X_TICK_COUNT = 10;
   static final int Y_TICK_COUNT = 10; 
   static final boolean DRAW_GRIDLINES = true;
+  ArrayList<PositionEventHandler> positionListeners = new ArrayList<PositionEventHandler>();
 
   float plot_x;
   float plot_y;
@@ -25,6 +26,8 @@ class Plotter {
     this.plot_height = plot_height;
   }
 
+ 
+
   void drawSelf() {
     fill(255);
     rectMode(CORNER);
@@ -32,6 +35,10 @@ class Plotter {
     drawBorder();
     drawAxis();
     drawAxisTicks();
+  }
+
+  void addPositionListener(PositionEventHandler listener) {
+   positionListeners.add(listener); 
   }
 
   void drawBorder() {
@@ -105,6 +112,12 @@ class Plotter {
     return new PVector(screen_x, screen_y);
   }
 
+  private PVector toWorldSpace(float x, float y) {
+    float world_x = (x - plot_x)  * ((X_MAX - X_MIN)/(plot_width)) + X_MIN;
+    float world_y = (plot_height - (y - plot_y))  * ((Y_MAX - Y_MIN)/(plot_height)) + Y_MIN;
+    return new PVector(world_x, world_y);
+  }
+
   void drawLine(float x1, float y1, float x2, float y2) {
     PVector p1 = toScreenSpace(x1, y1);
     PVector p2 = toScreenSpace(x2, y2);
@@ -116,25 +129,34 @@ class Plotter {
     return x > plot_x && x < plot_x + plot_width && y > plot_y && y < plot_y + plot_height;
   }
   void drawPoint(float x, float y) {
-        PVector p1 = toScreenSpace(x, y);
-       if(checkBounds(p1.x, p1.y)) {
-    rectMode(CORNERS);
-    point(p1.x, p1.y);
-       }
+    PVector p1 = toScreenSpace(x, y);
+    if (checkBounds(p1.x, p1.y)) {
+      rectMode(CORNERS);
+      point(p1.x, p1.y);
+    }
   }
 
   void drawRectangle(float x1, float y1, float x2, float y2) {
-        PVector p1 = toScreenSpace(x1, y1);
+    PVector p1 = toScreenSpace(x1, y1);
     PVector p2 = toScreenSpace(x2, y2);
     rectMode(CORNERS);
     rect(p1.x, p1.y, p2.x, p2.y);
   }
 
   void drawEllipse(float x1, float y1, float x2, float y2) {
-            PVector p1 = toScreenSpace(x1, y1);
+    PVector p1 = toScreenSpace(x1, y1);
     PVector p2 = toScreenSpace(x2, y2);
     rectMode(CORNERS);
     ellipse(p1.x, p1.y, p2.x, p2.y);
   }
   
+  
+  void onMousePressed() {  
+    if((mouseX > plot_x && mouseX < plot_x + plot_width) && (mouseY > plot_y && mouseY < plot_y + plot_height)) {
+      PVector worldPos = toWorldSpace(mouseX, mouseY);
+      for(PositionEventHandler event : positionListeners) {
+        event.onPositionEvent(worldPos.copy());
+      }
+    }
+  }
 }
