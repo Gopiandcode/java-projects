@@ -2,33 +2,39 @@ color RED = color(200, 50, 12);
 color BLUE = color(30, 10, 200);
 boolean insert = false;
 Plotter plot;
-Sample sample = new Sample();
+Sample sample1 = new Sample();
+TheilSen sample2 = new TheilSen();
 void setup() {
   size(1280, 720);
   background(255);
   plot = plotCenteredAt(width/2, height/2, 500, 500);
-  plot.addPositionListener(sample);
+  plot.addPositionListener(sample1);
+  plot.addPositionListener(sample1);
 }
 
 void keyPressed() {
   if (key == 'r') {
-    if(!insert)
-      sample.regenerate();
+    if (!insert) {
+      sample2.regenerate();
+      sample1.regenerate();
+    }
   }
-  if(key == 'i') {
-    if(insert) {
+  if (key == 'i') {
+    if (insert) {
       insert = false;
-      sample.regenerate();
+      sample2.regenerate();
+      sample1.regenerate();
     } else {
       insert = true;
-      sample.emptyEntries();
+      sample2.emptyEntries();
+      sample1.emptyEntries();
     }
   }
 }
 
 void mousePressed() {
-  if(insert)
-  plot.onMousePressed();
+  if (insert)
+    plot.onMousePressed();
 }
 
 void draw() {
@@ -36,24 +42,25 @@ void draw() {
   strokeWeight(1.0);
   stroke(0);
   plot.drawSelf();
-  sample.draw(plot);
+  sample1.draw(plot);
+  sample2.draw(plot);
 
   int basex = 10;
   int basey = 40;
   int yinc = 30;
-  String sx = "Sx = " + sample.sx;
-  String sy = "Sy = " + sample.sy ;
-  String mux = "mUx = " + sample.mux ;
-  String muy = "mUy = " + sample.muy ;
-  String sxx = "Sxx = " + sample.sxx, 
-    syy = "Syy = " + sample.syy, 
-    sxy = "Syx = " + sample.sxy;
-  String varx = "Varx = " + sample.varx ;
-  String vary = "Vary = " + sample.vary ;
-  String covxy = "Covxy = " + sample.covxy ;
-  String row = "Row = " + sample.row ;
-  String bhat = "Bhat = " + sample.bhat ;
-  String ahat = "Ahat = " + sample.ahat ;
+  String sx = "Sx = " + sample1.sx;
+  String sy = "Sy = " + sample1.sy ;
+  String mux = "mUx = " + sample1.mux ;
+  String muy = "mUy = " + sample1.muy ;
+  String sxx = "Sxx = " + sample1.sxx, 
+    syy = "Syy = " + sample1.syy, 
+    sxy = "Syx = " + sample1.sxy;
+  String varx = "Varx = " + sample1.varx ;
+  String vary = "Vary = " + sample1.vary ;
+  String covxy = "Covxy = " + sample1.covxy ;
+  String row = "Row = " + sample1.row ;
+  String bhat = "Bhat = " + sample1.bhat ;
+  String ahat = "Ahat = " + sample1.ahat ;
   text(sx, basex, basey + yinc * 0);
   text(sy, basex, basey + yinc * 1);
   text(mux, basex, basey + yinc * 2);
