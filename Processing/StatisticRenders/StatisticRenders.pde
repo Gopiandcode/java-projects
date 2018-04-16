@@ -9,7 +9,7 @@ void setup() {
   background(255);
   plot = plotCenteredAt(width/2, height/2, 500, 500);
   plot.addPositionListener(sample1);
-  plot.addPositionListener(sample1);
+  plot.addPositionListener(sample2);
 }
 
 void keyPressed() {

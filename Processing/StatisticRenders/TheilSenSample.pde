@@ -124,7 +124,7 @@ class TheilSen implements PositionEventHandler {
   }
 
   void draw(Plotter plot) {
-          stroke(0, 0, 200);
+          stroke(0, 200, 100);
       strokeWeight(1.5);
     plot.drawLine(plot.X_MIN, ahat + bhat * plot.X_MIN, plot.X_MAX, ahat + bhat * plot.X_MAX);
 
