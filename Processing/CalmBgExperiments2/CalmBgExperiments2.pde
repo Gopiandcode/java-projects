@@ -1,4 +1,7 @@
 import java.util.Iterator;
+
+
+
 class Circle {
   PVector position;
   PVector velocity;
@@ -11,7 +14,7 @@ class Circle {
  
  Circle(float x, float y, float radius) {
    this.position = new PVector(x,y);
-   this.velocity = new PVector(random(-10,10), random(-10,10));
+   this.velocity = new PVector(random(-5,5), random(-5,5));
    this.radius = radius;
    
    this.red = random(255);
@@ -37,13 +40,85 @@ class Circle {
  }
 }
 
+class Source {
+  PVector position;
+  PVector velocity;
+  float time;
+  float speed;
+  
+  
+  Source() {
+    time = random(0,100);
+    speed= random(0.3,2);
+   this.position = new PVector(width/2, height/2);
+   this.velocity = new PVector(0, 0);
+  }
+  
+  
+  void update() {
+    if(random(0,1) > 0.8) {
+    this.velocity.x = speed * sin(time);
+    this.velocity.y = speed * cos(time);
+    }
+    
+    if(position.x < 0 || position.x > width) {
+     this.velocity.x *= -1; 
+    }
+    if(position.y < 0 || position.y > height) {
+     this.velocity.y *= -1; 
+    }
+    
+    if(position.x < 0) {
+     position.x += 1; 
+    }
+    if(position.x > width) {
+     position.x -= 1; 
+    }
+    
+    if(position.y < 0) {
+     position.y += 1; 
+    }
+    if(position.y > height) {
+     position.y -= 1; 
+    }
+    
+    time += PI/360;
+    
+    position.add(velocity);
+    if(random(0,1) > 0.99) {
+        entities.add(new Circle(position.x, position.y, random(1, 100)));
+    }
+    
+   
+  }
+  
+  void draw() {
+    // nothing to draw
+    //stroke(10);
+    //fill(100,100,0);
+    //rectMode(CENTER);
+    //ellipse(position.x, position.y, 10,10);
+  }
+}
+
+
+
+void keyPressed() {
+  if(key == 's') {
+    
+  sources.clear();
+  } else if(key == 'c') {
+   entities.clear(); 
+  }
+}
 
 void mousePressed() {
-  entities.add(new Circle(mouseX, mouseY, random(1, 100)));
+  sources.add(new Source());
 }
 
 
 ArrayList<Circle> entities = new ArrayList<Circle>();
+ArrayList<Source> sources = new ArrayList<Source>();
 
 void setup() {
  background(0, 33, 100); 
@@ -62,5 +137,10 @@ void draw() {
   if(c.isOffScreen()) {
    iter.remove(); 
   }
+ }
+ 
+ for(Source source : sources) {
+  source.update();
+  source.draw();
  }
 }
