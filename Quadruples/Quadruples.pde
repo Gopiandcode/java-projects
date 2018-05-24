@@ -12,7 +12,7 @@ abstract class Quadruple {
 
   public void draw() {
     noFill();
-    stroke(10);
+    stroke(0, 10, 20);
     rectMode(CORNER);
     rect(startX, startY, this.width, this.height);
     drawSpecial();
@@ -216,11 +216,20 @@ void setup() {
 }
 
 void draw() {
-  background(255);
+  background(10, 20, 30);
   main.update();
   main.draw();
   if (mousePressed) {
 
     main = main.addEntity(new Particle(mouseX, mouseY));
+  }
+
+  if (Math.random() > 0.95) {
+    int posX = (int)(Math.random() * width);
+    int posY = (int)(Math.random() * height);
+
+    int count = (int)(Math.random() * 100);
+    for (int i= 0; i < count; i++) 
+      main = main.addEntity(new Particle(posX, posY));
   }
 }

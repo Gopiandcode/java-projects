@@ -7,15 +7,17 @@ interface Entity {
 }
 float spd = 1;
 float accel = 0.5;
-float size = 20;
+float size = 10;
 class Particle implements Entity {
    PVector position;
    PVector velocity;
    PVector acceleration;
    
    void collide(Entity other) {
-     if(PVector.dist(other.getPosition(), position) < size/2) {
+     if(PVector.dist(other.getPosition(), position) < size) {
        PVector dir = PVector.sub(position,other.getPosition());
+       dir.normalize();
+       dir.mult(5);
        velocity.add(dir);
        
      }
@@ -40,10 +42,10 @@ class Particle implements Entity {
   }
   
   void draw() {
-    int red = (int)(velocity.mag() /100) * 255;
-    int green = (int)(acceleration.mag() /100) * 255;
+    int red = (int)(velocity.mag() /10 * 255);
+    int green = (int)(acceleration.mag() /10 * 255);
     
-    int blue = (int)(acceleration.mag() * velocity.mag()/(100*100)) * 255;
+    int blue = (int)(acceleration.mag() * velocity.mag()/(10*10) * 255);
     fill(red, green, blue);
     rectMode(CENTER);
     noStroke();
