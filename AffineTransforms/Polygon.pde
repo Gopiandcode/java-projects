@@ -22,7 +22,6 @@ class Polygon {
     for (PVector p : points) {
       transform.mult(p, result);
       vertex(result.x, result.y);
-      println("" + result.x + "/" + width + "," + result.y + "/" + height);
     }
     endShape();
   }

@@ -1,13 +1,13 @@
 import java.util.Calendar;
 PMatrix2D positionMatrix;
-PMatrix2D hourScaleMatrix = getScaleMatrix(1, 5.5);
-PMatrix2D minuteScaleMatrix = getScaleMatrix(1, 7.3);
+PMatrix2D hourScaleMatrix = getScaleMatrix(2, 5.5);
+PMatrix2D minuteScaleMatrix = getScaleMatrix(2, 9.3);
 
 void drawClockTimes() {
-  PVector center = new PVector(width/2, height/2);
+  PVector center = new PVector(width/2-5, height/2);
    for(float i = 1; i <= 12; i++) {
        PVector point = PVector.add(center, new PVector(90 * cos((i/12.0) * PI * 2 - PI/2), 90 * sin((i/12.0) * PI * 2 - PI/2)));
-       text("" + i, point.x - textWidth("" + i), point.y);
+       text("" + (int)i, point.x - textWidth("" + (int)i), point.y);
    }
 }
 
@@ -18,11 +18,16 @@ float minutes = rightnow.get(Calendar.MINUTE);
 void setup() {
   size(640, 640);
   background(255);
-  positionMatrix = getMovementMatrix(new PVector(width/2, height/2));
+  positionMatrix = getMovementMatrix(new PVector(width/2-10, height/2));
 }
 
 void draw() {
   background(255);
+  rectMode(CENTER);
+  fill(220);
+  ellipse(width/2 - 10, height/2- 5, 240, 240);
+  
+  fill(0);
   text("" + hour + ":" + minutes, 10, 10);
   minutes += 1;
   if(minutes >= 60) {
