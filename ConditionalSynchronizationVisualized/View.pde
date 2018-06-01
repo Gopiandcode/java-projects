@@ -8,7 +8,7 @@ class PathView {
     
     void update() {
       float dist = min(PVector.dist(position, end), stepSize);
-      PVector moveDir = dir.mult(dist);
+      PVector moveDir = PVector.mult(dir, dist);
       position.add(moveDir);
     }
     
@@ -27,16 +27,36 @@ class PathView {
   private float stepSize;
   private ArrayList<InternalCarView> completed = new ArrayList<InternalCarView>();
   private ArrayList<InternalCarView> ongoing = new ArrayList<InternalCarView>();
+  private volatile boolean insertBufferInUse = false;
+  private volatile boolean insertBufferInsert = false;
+  private ArrayList<InternalCarView> insertBuffer = new ArrayList<InternalCarView>();
   
   public PathView(PVector start, PVector end) {
     this.start = start;
     this.end = end;
-    this.dir = end.sub(start);
+    this.dir = PVector.sub(end,start);
     this.stepSize = dir.mag() / 30;
-    dir = dir.normalize();
+    dir.normalize();
+  }
+  
+  public synchronized void addCar(Callback c) {
+    while(insertBufferInUse) Thread.yield();
+    insertBufferInsert = true;
+   this.insertBuffer.add(new InternalCarView(c)); 
+   
+    insertBufferInsert = false;
   }
   
   public void draw() {
+    if(!insertBufferInsert) {
+      insertBufferInUse = true;
+      this.ongoing.addAll(insertBuffer);
+      insertBuffer.clear();
+      insertBufferInUse = false;
+    }
+    
+    rectMode(CORNERS);
+    line(start.x, start.y, end.x, end.y);
     for(InternalCarView v : ongoing) {
        v.draw(); 
     }
@@ -63,4 +83,36 @@ class PathView {
         }
     }
   }
+}
+
+class CarParkView {
+   private volatile int cars;
+   private volatile float leftCornerX;
+   private volatile float leftCornerY;
+   
+   private volatile float rightCornerX;
+   private volatile float rightCornerY;
+   
+   public CarParkView(float leftCornerX, float leftCornerY, float rightCornerX, float rightCornerY) {
+     this.cars = 0;
+     this.leftCornerX = leftCornerX;
+     this.leftCornerY = leftCornerY;
+     
+     this.rightCornerX = rightCornerX;
+     this.rightCornerY = rightCornerY;
+   }
+   
+   public synchronized void setCars(int cars) {
+     this.cars = cars;
+   }
+   
+   public void draw() {
+     fill(255);
+     rectMode(CORNERS);
+     rect(leftCornerX, leftCornerY, rightCornerX, rightCornerY);
+     String text = "Cars: " + cars;
+     fill(0);
+     text(text, (leftCornerX + rightCornerX)/2.0 - textWidth(text), (leftCornerY + rightCornerY)/2.0);
+   }
+   
 }
