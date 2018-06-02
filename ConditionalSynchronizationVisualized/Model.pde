@@ -91,7 +91,7 @@ class CarGenerator implements Runnable {
   public void run() {
     while (true) {
       try {
-        long time = (long)(((Math.random() * 2.0) + 1.0) * 0.0 * 1000.0);  
+        long time = (long)(((Math.random() * 2.0) + 1.0) * 0.8 * 1000.0);  
         Thread.sleep(time);
         new Thread(new InboundCar(p, enterPath)).start();
       } 
@@ -114,7 +114,7 @@ class CarExtractor implements Runnable {
   public void run() {
     while (true) {
       try {
-        long time = (long)(((Math.random() * 2.0) + 1.0) * 5.0 * 1000.0);  
+        long time = (long)(((Math.random() * 2.0) + 1.0) * 1.0 * 1000.0);  
         Thread.sleep(time);
         new Thread(new OutboundCar(p, enterPath)).start();
       } 

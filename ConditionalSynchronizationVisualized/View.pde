@@ -112,7 +112,7 @@ class CarParkView {
      rect(leftCornerX, leftCornerY, rightCornerX, rightCornerY);
      String text = "Cars: " + cars;
      fill(0);
-     text(text, (leftCornerX + rightCornerX)/2.0 - textWidth(text), (leftCornerY + rightCornerY)/2.0);
+     text(text, (leftCornerX + rightCornerX)/2.0 - textWidth(text)/2.0, (leftCornerY + rightCornerY)/2.0);
    }
    
 }
