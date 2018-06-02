@@ -4,6 +4,7 @@ class CarPark {
   public CarPark(CarParkView v) {
    this.v = v; 
   }
+  public synchronized int getCars() {return cars;}
 
   public synchronized int enter() {
     cars++;
@@ -91,7 +92,8 @@ class CarGenerator implements Runnable {
   public void run() {
     while (true) {
       try {
-        long time = (long)(((Math.random() * 2.0) + 1.0) * 0.8 * 1000.0);  
+        float cars = 0.5 + p.getCars() / 10.0;
+        long time = (long)(((Math.random() * 3.0)) * cars * 1000.0);  
         Thread.sleep(time);
         new Thread(new InboundCar(p, enterPath)).start();
       } 
@@ -114,9 +116,12 @@ class CarExtractor implements Runnable {
   public void run() {
     while (true) {
       try {
-        long time = (long)(((Math.random() * 2.0) + 1.0) * 1.0 * 1000.0);  
+        float cars = 1.5 - p.getCars() / 10.0;
+        if(cars > 0.0) {
+        long time = (long)(((Math.random() * 3.0)) * cars * 1000.0);  
         Thread.sleep(time);
         new Thread(new OutboundCar(p, enterPath)).start();
+        }
       } 
       catch(InterruptedException e) {
       }

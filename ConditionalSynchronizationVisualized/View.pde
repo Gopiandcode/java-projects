@@ -5,9 +5,9 @@ class PathView {
   class InternalCarView {
     public PVector position;
     public Callback callback;
-    
+    private float difference;
     void update() {
-      float dist = min(PVector.dist(position, end), stepSize);
+      float dist = min(PVector.dist(position, end), stepSize + difference);
       PVector moveDir = PVector.mult(dir, dist);
       position.add(moveDir);
     }
@@ -19,6 +19,7 @@ class PathView {
     public InternalCarView(Callback callback) {
        this.position = start.copy();
        this.callback = callback;
+       this.difference = (float)Math.random() * 5 + 1;
     }
   }
   private PVector start;
@@ -35,7 +36,7 @@ class PathView {
     this.start = start;
     this.end = end;
     this.dir = PVector.sub(end,start);
-    this.stepSize = dir.mag() / 30;
+    this.stepSize = dir.mag() / 100.0;
     dir.normalize();
   }
   
